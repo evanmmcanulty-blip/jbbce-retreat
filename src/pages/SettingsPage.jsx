@@ -249,16 +249,23 @@ function GuestsTab({ users, isAdmin }) {
 
 function AdminTab({ users, profile }) {
   async function toggleAdmin(uid, cur) { await updateDoc(doc(db,'users',uid), { admin: !cur }); }
+  async function toggleAccountant(uid, cur) { await updateDoc(doc(db,'users',uid), { accountant: !cur }); }
   return (
     <div>
-      <div className="section-sub">Toggle admin for other users. Admins can edit/delete anything and manage rooms.</div>
+      <div className="section-sub">Toggle admin for other users. Admins can edit/delete anything and manage rooms. The accountant (Chris) can edit cost line items and confirm house-fund payments.</div>
       {users.filter(u => u.uid !== profile.uid).map(u => (
-        <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+        <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 0',borderBottom:'1px solid var(--border)',flexWrap:'wrap'}}>
           <span style={{fontSize:16}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}</span>
-          <button className="btn-mini" style={u.admin?{borderColor:'var(--sage)',color:'var(--sage)'}:{}}
-            onClick={()=>toggleAdmin(u.uid, u.admin)}>
-            {u.admin ? '✓ Admin — remove' : 'Make admin'}
-          </button>
+          <div className="btn-row">
+            <button className="btn-mini" style={u.admin?{borderColor:'var(--sage)',color:'var(--sage)'}:{}}
+              onClick={()=>toggleAdmin(u.uid, u.admin)}>
+              {u.admin ? '✓ Admin — remove' : 'Make admin'}
+            </button>
+            <button className="btn-mini" style={u.accountant?{borderColor:'var(--sage)',color:'var(--sage)'}:{}}
+              onClick={()=>toggleAccountant(u.uid, u.accountant)}>
+              {u.accountant ? '✓ Accountant — remove' : 'Make accountant'}
+            </button>
+          </div>
         </div>
       ))}
     </div>

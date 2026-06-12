@@ -82,6 +82,8 @@ export function initials(name) {
   if (!name) return '?';
   return name.split(' ').map(w => w[0]).join('').toUpperCase();
 }
+// Only allow real web links into href (blocks javascript: etc.)
+export function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? u : null; }
 // Is an event a "night" event? After 4pm or explicitly typed night
 export function isNightEvent(ev) {
   if (ev.type === 'night') return true;

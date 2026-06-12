@@ -2,16 +2,93 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
-    function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true;
+    function me() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
+    function isAdmin() { return isSignedIn() && me().admin == true; }
+    // Accountant (Chris) confirms house-fund payments; admins implicitly qualify
+    function isAccountant() { return isSignedIn() && (me().admin == true || me().accountant == true); }
+    function changesOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
     match /users/{uid} {
       allow read: if isSignedIn();
-      allow write: if request.auth.uid == uid || isAdmin();
+      // Signup: only the designated admin email may create itself with admin: true
+      allow create: if request.auth.uid == uid
+        && (request.resource.data.admin != true || request.auth.token.email == 'bnwokocha@gmail.com')
+        && request.resource.data.accountant != true;
+      // Privilege fields only changeable by an admin (no self-escalation)
+      allow update: if isAdmin()
+        || (request.auth.uid == uid
+            && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['admin', 'accountant']));
     }
-    match /{collection}/{doc} {
+
+    match /events/{id} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      // Idea promotion creates events owned by the idea's author, so owner != creator is legit
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || resource.data.owner == request.auth.uid
+        || changesOnly(['rsvps', 'rsvpsByDay']);
+      allow delete: if isAdmin() || resource.data.owner == request.auth.uid;
+    }
+
+    // Ideas are collaboratively editable by design ("anyone can refine")
+    match /ideas/{id} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin() || resource.data.by == request.auth.uid;
+    }
+
+    match /meals/{id} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() || request.resource.data.keys().hasOnly(['votes']);
+      // Guests vote; only admin sets final plan & cooks
+      allow update: if isAdmin() || changesOnly(['votes']);
+    }
+
+    match /receipts/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.by == request.auth.uid;
+      // Tagged people log their own payments; owner/admin edit everything else
+      allow update: if isAdmin() || resource.data.by == request.auth.uid
+        || changesOnly(['payments']);
+      allow delete: if isAdmin() || resource.data.by == request.auth.uid;
+    }
+
+    match /bulletins/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.by == request.auth.uid;
+      allow update: if isAdmin() || resource.data.by == request.auth.uid
+        || changesOnly(['gotIt']);
+      allow delete: if isAdmin() || resource.data.by == request.auth.uid;
+    }
+
+    // Anyone can claim / mark purchased — that's the feature
+    match /groceries/{id} {
+      allow read, create, update: if isSignedIn();
+      allow delete: if isAdmin() || resource.data.addedBy == request.auth.uid;
+    }
+
+    match /infoCustom/{id} {
+      allow read, create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || resource.data.by == request.auth.uid;
+    }
+
+    // payments/{uid}: guest logs what they sent; only accountant confirms receipt
+    match /payments/{uid} {
+      allow read: if isSignedIn();
+      allow write: if isAccountant()
+        || (request.auth.uid == uid
+            && (resource == null
+                ? !request.resource.data.keys().hasAny(['confirmed'])
+                : !request.resource.data.diff(resource.data).affectedKeys().hasAny(['confirmed'])));
+    }
+
+    // config/house: admin. config/cost: accountant (incl. admin).
+    match /config/{docId} {
+      allow read: if isSignedIn();
+      allow write: if docId == 'cost' ? isAccountant() : isAdmin();
     }
   }
 }

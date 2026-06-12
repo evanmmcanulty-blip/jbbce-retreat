@@ -11,7 +11,7 @@ export default function HousePage() {
   const { profile } = useAuth();
   const [sub, setSub] = useState('info');
   const isAdmin = profile?.admin;
-  const isAccountant = (profile?.displayName||'').toLowerCase().includes('chris') || isAdmin;
+  const isAccountant = profile?.accountant || isAdmin;
 
   return (
     <div className="page">

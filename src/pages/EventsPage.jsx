@@ -3,7 +3,7 @@ import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
-import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_LOCATIONS, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent } from '../constants';
+import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_LOCATIONS, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent, safeUrl } from '../constants';
 import Modal from '../components/Modal';
 
 export default function EventsPage() {
@@ -131,7 +131,7 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
               <div><div style={{fontSize:11,color:'var(--muted)'}}>COST</div><div style={{fontSize:14}}>{ev.cost||'—'}</div></div>
             </div>
             {ev.loc && <div style={{marginTop:5}}><span style={{fontSize:11,color:'var(--muted)'}}>WHERE: </span>{ev.loc}</div>}
-            {ev.url && <div style={{marginTop:5}}><a href={ev.url} target="_blank" rel="noopener noreferrer" className="link-url">{ev.url} ↗</a></div>}
+            {safeUrl(ev.url) && <div style={{marginTop:5}}><a href={safeUrl(ev.url)} target="_blank" rel="noopener noreferrer" className="link-url">{ev.url} ↗</a></div>}
 
             {ev.recurring && (
               <div className="tip-box" style={{marginTop:8,marginBottom:4}}>
@@ -391,7 +391,7 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
                   <>
                     <div style={{fontSize:13,color:'var(--muted)',marginBottom:6}}>{idea.desc}</div>
                     {idea.loc && <div style={{fontSize:13}}>📍 {idea.loc}</div>}
-                    {idea.url && <a href={idea.url} target="_blank" rel="noopener noreferrer" className="link-url">{idea.url} ↗</a>}
+                    {safeUrl(idea.url) && <a href={safeUrl(idea.url)} target="_blank" rel="noopener noreferrer" className="link-url">{idea.url} ↗</a>}
                     <button className="btn-mini" style={{marginTop:8}} onClick={()=>setEditingIdea(idea.id)}>✏️ Refine details (anyone can edit)</button>
                   </>
                 ) : (

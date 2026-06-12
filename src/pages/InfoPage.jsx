@@ -3,6 +3,7 @@ import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestor
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { safeUrl } from '../constants';
 
 const BUILTINS = [
   { h:'⛴ FERRY & TRANSPORT', items:[
@@ -244,7 +245,7 @@ function LinksTab({ profile, isAdmin }) {
           <div style={{flex:1}}>
             <div style={{fontWeight:'bold',fontSize:14}}>{it.t}</div>
             <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>{it.d} · {it.byName}</div>
-            {it.u && <a className="link-url" href={it.u} target="_blank" rel="noopener noreferrer">Open ↗</a>}
+            {safeUrl(it.u) && <a className="link-url" href={safeUrl(it.u)} target="_blank" rel="noopener noreferrer">Open ↗</a>}
           </div>
           {(isAdmin||it.by===profile?.uid) && (
             <button className="btn btn-danger" onClick={async()=>{if(window.confirm('Remove?'))await deleteDoc(doc(db,'infoCustom',it.id));}}>🗑</button>

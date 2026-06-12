@@ -9,8 +9,10 @@ Build check: `CI=true npx react-scripts build` (must pass before commit). App is
   - Queued from accretive, NOT yet built:
     - Lens B (design treatment): time-of-day Provincetown sky gradient on Today hero (do during /delight)
     - Lens C (UX micro): receipt "Who was there?" pre-selects people present per arrival/departure dates (do during /empathize)
-- [ ] /empathize — NEXT. Walk the app as: a guest mid-trip on iPhone, the admin (Brandon), the accountant (Chris), a late-arriving guest. Implement top frictions (include queued Lens C).
-- [ ] /audit — codebase-audit skill; known candidates: firestore.rules catch-all allows any signed-in user to write anything incl. config/cost + payments (privilege gap); window.prompt/alert flows; admin assigned by hardcoded email in client; no error handling on Firestore writes; XSS-safe (React) but check links/urls.
+- [x] /empathize — DONE (commit a7dc4e1): password reset, 16px iOS input floor, who-was-there pre-select (Lens C), day-picker for event repeat, no-room banner, receipts loading flash.
+  - Deferred to /audit: Chris-accountant gate is displayName.includes('chris') (brittle/spoofable); House Payments tab still uses window.prompt (works, lower traffic).
+  - Deferred to later cycle: meal "winner" declared from 1 vote (show vote count?); identical 👤 fallback avatars in RSVP rows (Avatar component with initials exists but unused in those rows).
+- [ ] /audit — NEXT. codebase-audit skill; known candidates: firestore.rules catch-all allows any signed-in user to write anything incl. config/cost + payments + other users' meals votes (privilege gap); admin assigned by hardcoded email in client; Chris gate by name substring; no error handling on Firestore writes (beach LTE = silent data loss); storage.rules allow any authed write any path; .firebaserc/config exposure is fine (client config is public by design) but check Storage size limits.
 - [ ] /iceberg — unknown-unknowns for "13 guys live on this app for 2 weeks": Firebase free-tier quotas, storage costs of receipt photos, lost-password mid-trip, multi-device, offline at the beach, June 29 timezone edges.
 - [ ] /delight — include accretive Lens B sky treatment + micro-joy (paid-up celebration, day-strip today pulse, etc).
 
