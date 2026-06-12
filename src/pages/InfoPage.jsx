@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { safeUrl } from '../constants';
+import Avatar from '../components/Avatar';
 
 const BUILTINS = [
   { h:'⛴ FERRY & TRANSPORT', items:[
@@ -100,9 +101,7 @@ function BulletinBoard({ profile, isAdmin }) {
                 onClick={()=>toggleGotIt(b)}>
                 {iGotIt?'✓ Got it':'Got it?'}
               </button>
-              {confirmedUsers.map(u => (
-                <span key={u.uid} title={`${u.displayName} got it`} style={{fontSize:18}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>
-              ))}
+              {confirmedUsers.map(u => <Avatar key={u.uid} user={u} size={22} />)}
             </div>
           </div>
         );

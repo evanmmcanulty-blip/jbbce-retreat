@@ -29,12 +29,13 @@ export default function TodayPage() {
   function getMealDoc(mt) { return meals.find(m=>m.id===`${mt}-${viewIdx}`); }
   function getWinner(mt) {
     const md = getMealDoc(mt);
-    if (md?.final) return MEAL_OPTIONS.find(o=>o.value===md.final);
+    if (md?.final) return { opt: MEAL_OPTIONS.find(o=>o.value===md.final), final: true };
+    const votes = Object.values(md?.votes||{});
     const counts = {};
-    Object.values(md?.votes||{}).forEach(v=>{counts[v]=(counts[v]||0)+1;});
+    votes.forEach(v=>{counts[v]=(counts[v]||0)+1;});
     let best='',bn=0;
     Object.entries(counts).forEach(([k,n])=>{if(n>bn){bn=n;best=k;}});
-    return best ? MEAL_OPTIONS.find(o=>o.value===best) : null;
+    return best ? { opt: MEAL_OPTIONS.find(o=>o.value===best), final: false, votes: bn, total: votes.length } : null;
   }
   function cooksLine(mt) {
     const md = getMealDoc(mt);
@@ -88,7 +89,7 @@ export default function TodayPage() {
 
       <div style={{background:'var(--ol)',border:'1px solid var(--om)',borderRadius:8,padding:'9px 12px',display:'flex',alignItems:'center',gap:10,marginBottom:12,fontSize:14}}>
         <span style={{fontSize:22}}>{w.icon}</span>
-        <div><b>Forecast:</b> {w.hi}° high / {w.lo}° low</div>
+        <div><b>Typical late June:</b> {w.hi}° high / {w.lo}° low</div>
       </div>
 
       {strictOnes.length>0 && (
@@ -109,8 +110,12 @@ export default function TodayPage() {
             <div key={mt} className={`meal-card ${myVote?'voted':'no-vote'}`}
               onClick={()=>{setVoteModal({mt});setPendingVote(myVote||'');}}>
               <div className="mc-label">{mt.toUpperCase()}</div>
-              <div className="mc-plan">{cooks || (winner ? winner.label : 'No plan yet')}</div>
-              {!cooks && winner && winner.value==='ill_cook' && <div style={{fontSize:11,color:'var(--muted)'}}>cook TBD — check Meals</div>}
+              <div className="mc-plan">{cooks || (winner ? winner.opt.label : 'No plan yet')}</div>
+              {/* A "winner" from a couple of votes is a leader, not a plan — say so */}
+              {!cooks && winner && !winner.final && (
+                <div style={{fontSize:10,color:'var(--muted)'}}>leading · {winner.votes} of {winner.total} vote{winner.total!==1?'s':''}</div>
+              )}
+              {!cooks && winner && winner.opt.value==='ill_cook' && <div style={{fontSize:11,color:'var(--muted)'}}>cook TBD — check Meals</div>}
               {myOpt
                 ? <div className="mc-you">Your vote: {myOpt.icon} {myOpt.label.replace(/^[^ ]+ /,'')} (tap to change)</div>
                 : <div className="mc-vote-prompt">⚠️ You haven't voted — tap to vote!</div>}
@@ -181,7 +186,7 @@ export default function TodayPage() {
                 <span style={{fontSize:20}}>{opt.icon}</span>
                 <span style={{flex:1}}>{opt.label.replace(/^[^ ]+ /,'')}</span>
                 <span style={{display:'flex',gap:2}}>
-                  {votersFor.map(u=><span key={u.uid} title={u.displayName} style={{fontSize:16}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}
+                  {votersFor.map(u=><Avatar key={u.uid} user={u} size={20} />)}
                 </span>
               </div>
             );

@@ -16,7 +16,7 @@ Build check: `CI=true npx react-scripts build` (must pass before commit). App is
   - OWNER ACTIONS PENDING (tell Evan at loop end): (1) firebase deploy --only firestore:rules,storage  (2) Brandon toggles accountant for Chris  (3) post-deploy smoke test per docs/audits/findings.md.
 - [x] /iceberg — DONE (commit bc1e2ec). 13-row register; built: admin JSON export backup, signup approval gate (grandfathered existing users). Declined service worker on purpose (staleness risk > offline-load benefit).
   - OWNER ACTIONS (add to final summary): get Firebase console Owner access from the friend (top risk); check Spark vs Blaze, enable Blaze + ~$10 budget alert (quota blackout = 50K reads/day); verify Brandon's account is bnwokocha@gmail.com admin; weekly + day-13 JSON export habit; eyeball signup emails for typos; glance at Firebase usage tab daily during trip.
-- [ ] /delight — include accretive Lens B sky treatment + micro-joy (paid-up celebration, day-strip today pulse, etc).
+- [x] /delight — DONE (commit 9138736): live time-of-day sky hero (Lens B), all-square 🍹 celebration, initials avatars replacing identical 👤, today-chip glow, reduced-motion respected.
 
-## Cycle 2+
-Re-run lenses on the evolved app; stop when a full cycle yields no meaningful additions. Then end loop (no ScheduleWakeup) and summarize.
+## Cycle 1 complete. Cycle 2: re-run lenses on the evolved app.
+Carry-overs worth checking in cycle 2: meal "winner" declared from a single vote (show vote count or "leading 2-1"?); House Payments tab still window.prompt; "Forecast" label on WEATHER_AVG is really historical averages (mislabel); remaining 👤 sites (vote modals, ideas, receipts rows). Stop when a full cycle yields nothing meaningful → end loop, summarize incl. OWNER ACTIONS from /audit + /iceberg above.

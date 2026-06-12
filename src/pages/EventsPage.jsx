@@ -396,14 +396,14 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
                   <div>
                     <div style={{fontSize:11,color:'var(--sage)',fontWeight:'bold'}}>👍 YES ({yesUsers.length})</div>
                     <div style={{display:'flex',gap:3,marginTop:3}}>
-                      {yesUsers.map(u=><span key={u.uid} title={u.displayName} style={{fontSize:20}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}
+                      {yesUsers.map(u=><Avatar key={u.uid} user={u} size={22} />)}
                       {yesUsers.length===0 && <span style={{fontSize:11,color:'var(--muted)'}}>nobody yet</span>}
                     </div>
                   </div>
                   <div>
                     <div style={{fontSize:11,color:'var(--coral)',fontWeight:'bold'}}>👎 NO ({noUsers.length})</div>
                     <div style={{display:'flex',gap:3,marginTop:3}}>
-                      {noUsers.map(u=><span key={u.uid} title={u.displayName} style={{fontSize:20}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}
+                      {noUsers.map(u=><Avatar key={u.uid} user={u} size={22} />)}
                       {noUsers.length===0 && <span style={{fontSize:11,color:'var(--muted)'}}>nobody yet</span>}
                     </div>
                   </div>
@@ -606,7 +606,7 @@ function MealsTab({ meals, users, profile, isAdmin }) {
                 <span style={{fontSize:20}}>{opt.icon}</span>
                 <span style={{flex:1}}>{opt.label.replace(/^[^ ]+ /,'')}</span>
                 <span style={{display:'flex',gap:2}}>
-                  {votersFor.map(u=><span key={u.uid} title={u.displayName} style={{fontSize:16}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}
+                  {votersFor.map(u=><Avatar key={u.uid} user={u} size={20} />)}
                 </span>
               </div>
             );

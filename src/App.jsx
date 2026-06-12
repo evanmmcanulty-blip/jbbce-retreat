@@ -16,6 +16,7 @@ function AppShell() {
   const { user, profile } = useAuth();
   const [tab, setTab] = useState('today');
   const { docs: receipts } = useCollection('receipts');
+  const { docs: bulletins } = useCollection('bulletins');
 
   if (user === undefined) return (
     <div style={{ display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:'Georgia,serif',color:'#1a6b8a',fontSize:18 }}>
@@ -44,12 +45,20 @@ function AppShell() {
     !(r.payments?.[profile?.uid]?.confirmed)
   ).length;
 
+  // Recent announcements (last 48h) I haven't tapped "Got it" on
+  const cutoff = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+  const unseenBulletins = bulletins.filter(b =>
+    b.createdAt > cutoff &&
+    b.by !== profile?.uid &&
+    !b.gotIt?.includes(profile?.uid)
+  ).length;
+
   const TABS = [
     { id:'today', label:'☀ Today' },
     { id:'events', label:'📅 Events' },
     { id:'house', label:'🏠 House' },
     { id:'receipts', label:'🧾 Receipts', badge: myReceiptAlerts },
-    { id:'info', label:'🗺 Info' },
+    { id:'info', label:'🗺 Info', badge: unseenBulletins },
   ];
 
   return (
