@@ -6,18 +6,21 @@
   --plum:#8a5aaa;--pl:#f3edf8;
   --text:#2c2416;--muted:#7a6a56;
   --white:#fff;--border:rgba(44,36,22,.12);--r:10px;
+  --font-display:'Bebas Neue',Impact,sans-serif;
+  --font-body:'Barlow',system-ui,sans-serif;
+  --font-label:'Barlow Condensed',system-ui,sans-serif;
 }
-body{font-family:Georgia,serif;background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5}
+body{font-family:var(--font-body);background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5}
 /* Masthead — faux-resort letterhead: big italic display vs tiny tracked caps */
 .hero{background:linear-gradient(165deg,#12506b,#1a6b8a 55%,#23789c);color:#fff;padding:22px 20px 15px;text-align:center}
-.hero h1{font-size:27px;font-style:italic;font-weight:normal;margin-bottom:6px;letter-spacing:.01em;line-height:1.15}
+.hero h1{font-family:var(--font-display);font-size:30px;font-style:normal;font-weight:400;margin-bottom:6px;letter-spacing:.02em;line-height:1}
 .hero .sub{font-size:10px;opacity:.85;letter-spacing:.22em;display:flex;align-items:center;justify-content:center;gap:10px}
 .hero .sub::before,.hero .sub::after{content:'';height:1px;width:30px;background:rgba(255,255,255,.4);flex-shrink:0}
 .hero .ac{font-size:10px;opacity:.55;margin-top:5px;font-style:italic;letter-spacing:.04em}
 .nav-wrap{background:var(--ocean);border-top:1px solid rgba(255,255,255,.15)}
 .nav{overflow-x:auto;display:flex;white-space:nowrap}
 .nav.sec{background:rgba(0,0,0,.2)}
-.nav-btn{color:rgba(255,255,255,.7);font-size:13px;padding:10px 12px;cursor:pointer;border:none;background:none;font-family:inherit;transition:all .15s;border-bottom:2px solid transparent;flex-shrink:0}
+.nav-btn{color:rgba(255,255,255,.7);font-size:13px;padding:10px 12px;cursor:pointer;border:none;background:none;font-family:var(--font-label);letter-spacing:.04em;transition:all .15s;border-bottom:2px solid transparent;flex-shrink:0}
 .nav.sec .nav-btn{padding:8px 12px;font-size:12px}
 .nav-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
 .nav-btn.active{color:#fff;border-bottom:2px solid #c8a84b}
@@ -32,10 +35,10 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:var(--text);font-size:16
 .chev{font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0}
 .chev.open{transform:rotate(180deg)}
 .stabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:14px;overflow-x:auto}
-.stab{padding:8px 14px;cursor:pointer;border:none;background:none;font-family:inherit;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;flex-shrink:0}
+.stab{padding:8px 14px;cursor:pointer;border:none;background:none;font-family:var(--font-label);font-size:13px;letter-spacing:.03em;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;flex-shrink:0}
 .stab:hover{color:var(--ocean)}
 .stab.active{color:var(--ocean);border-bottom:2px solid var(--ocean);font-weight:bold}
-.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:20px;font-weight:bold}
+.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:20px;font-weight:bold;font-family:var(--font-label);letter-spacing:.04em}
 .badge-o{background:var(--ol);color:var(--ocean)}
 .badge-c{background:var(--cl);color:var(--coral)}
 .badge-s{background:var(--sl);color:var(--sage)}
@@ -59,9 +62,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--om)}
 textarea{resize:vertical;min-height:60px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tip-box{background:var(--gl);border:1px solid var(--gold);border-radius:8px;padding:9px 12px;font-size:12px;color:#6a5215;line-height:1.5}
-.info-head{font-size:11px;font-weight:bold;color:var(--muted);letter-spacing:.16em;margin-bottom:8px;margin-top:18px}
+.info-head{font-family:var(--font-label);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;margin-top:18px}
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
-.section-title{font-size:24px;font-style:italic;font-weight:normal;margin-bottom:5px;color:var(--ocean);line-height:1.2}
+.section-title{font-family:var(--font-display);font-size:24px;font-style:normal;font-weight:400;letter-spacing:.02em;margin-bottom:5px;color:var(--ocean);line-height:1.1}
 .section-sub{font-size:14px;color:var(--muted);margin-bottom:14px}
 .empty-note{color:var(--muted);font-size:13px;font-style:italic;padding:16px 0;text-align:center}
 /* Avatar */
@@ -90,7 +93,7 @@ textarea{resize:vertical;min-height:60px}
 .day-chip .ec{font-size:10px;margin-top:1px}
 /* Today */
 .today-hero{background:var(--ocean);color:#fff;border-radius:var(--r);padding:15px 17px;margin-bottom:11px}
-.today-hero .bd{font-size:19px;font-style:italic}
+.today-hero .bd{font-family:var(--font-display);font-size:22px;letter-spacing:.02em}
 .today-hero .dl{font-size:11px;opacity:.75;margin-top:2px}
 .meal-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
 .meal-card{border-radius:10px;padding:10px 11px;border:1px solid var(--border);background:#fff}
@@ -144,7 +147,7 @@ textarea{resize:vertical;min-height:60px}
 /* Auth */
 .auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:#f5f0e8}
 .auth-card{background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:28px 24px;max-width:400px;width:100%}
-.auth-card h2{font-size:20px;color:var(--ocean);font-style:italic;margin-bottom:5px;text-align:center}
+.auth-card h2{font-family:var(--font-display);font-size:24px;color:var(--ocean);font-style:normal;letter-spacing:.02em;margin-bottom:5px;text-align:center}
 .auth-card .sub{font-size:12px;color:var(--muted);text-align:center;margin-bottom:20px}
 .error-msg{background:var(--cl);color:var(--coral);border:1px solid var(--coral);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:10px}
 /* Announcement / bulletin */
@@ -160,7 +163,7 @@ textarea{resize:vertical;min-height:60px}
 .weather-day:hover{border-color:var(--om)}
 /* Live Provincetown sky — Today hero tracks the actual time of day */
 .today-hero{text-shadow:0 1px 2px rgba(0,0,0,.2);transition:background 1s;padding:19px 18px}
-.today-hero .bd{font-size:25px;line-height:1.15}
+.today-hero .bd{font-size:28px;line-height:1}
 .today-hero .dl{letter-spacing:.2em;font-size:10px;margin-top:5px}
 .today-hero.sky-dawn{background:linear-gradient(150deg,#2c3e6b,#8a5aaa 45%,#d4715a 80%,#c8a84b)}
 .today-hero.sky-day{background:linear-gradient(150deg,#1a6b8a,#4a9db5 65%,#8ecede)}

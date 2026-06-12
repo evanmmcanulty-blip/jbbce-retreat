@@ -80,7 +80,7 @@ export default function AuthPage() {
       <div style={{ maxWidth: 420, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 22 }}>
           <div style={{ fontSize: 11, letterSpacing: '.24em', color: '#7a6a56', marginBottom: 6 }}>EST. 2026 · PROVINCETOWN</div>
-          <div style={{ fontSize: 31, fontStyle: 'italic', color: '#1a6b8a', lineHeight: 1.15, marginBottom: 7 }}>
+          <div style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 36, fontStyle: 'normal', color: '#1a6b8a', lineHeight: 1, letterSpacing: '0.02em', marginBottom: 7 }}>
             The JBBCE<br />Executive Retreat
           </div>
           <div style={{ fontSize: 10, color: '#7a6a56', fontStyle: 'italic' }}>

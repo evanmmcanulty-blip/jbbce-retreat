@@ -22,7 +22,7 @@ function AppShell() {
   const { docs: bulletins } = useCollection(ready ? 'bulletins' : null);
 
   if (user === undefined) return (
-    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:'Georgia,serif',color:'#1a6b8a',fontSize:18 }}>
+    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:"'Barlow',system-ui,sans-serif",color:'#1a6b8a',fontSize:18 }}>
       Loading...
     </div>
   );
