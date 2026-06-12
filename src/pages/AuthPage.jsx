@@ -61,15 +61,18 @@ export default function AuthPage() {
   return (
     <div className="auth-page">
       <div style={{ maxWidth: 420, width: '100%' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 22, fontStyle: 'italic', color: '#1a6b8a', marginBottom: 4 }}>
-            2026 JBBCE Executive Retreat
+        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+          <div style={{ fontSize: 11, letterSpacing: '.24em', color: '#7a6a56', marginBottom: 6 }}>EST. 2026 · PROVINCETOWN</div>
+          <div style={{ fontSize: 31, fontStyle: 'italic', color: '#1a6b8a', lineHeight: 1.15, marginBottom: 7 }}>
+            The JBBCE<br />Executive Retreat
           </div>
           <div style={{ fontSize: 10, color: '#7a6a56', fontStyle: 'italic' }}>
             Joint Brotherhood of Beachside Cock Enthusiasts
           </div>
-          <div style={{ fontSize: 11, color: '#7a6a56', marginTop: 4 }}>
-            5–7 Point St #3, Provincetown, MA · Jun 29 – Jul 11
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 8 }}>
+            <span style={{ height: 1, width: 34, background: 'rgba(44,36,22,.25)' }} />
+            <span style={{ fontSize: 11, color: '#7a6a56', letterSpacing: '.06em' }}>5–7 Point St #3 · Jun 29 – Jul 11</span>
+            <span style={{ height: 1, width: 34, background: 'rgba(44,36,22,.25)' }} />
           </div>
         </div>
 
