@@ -44,43 +44,16 @@ In your Firebase console (console.firebase.google.com → provincetown-2026):
 - Click Authentication → Get started → Email/Password → Enable → Save
 
 **Firestore Database:**
-- Click Firestore Database → Create database → Start in test mode → Next → Done
-- Then click Rules tab and paste:
-  ```
-  rules_version = '2';
-  service cloud.firestore {
-    match /databases/{database}/documents {
-      function isSignedIn() { return request.auth != null; }
-      function isAdmin() {
-        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.admin == true;
-      }
-      match /users/{uid} {
-        allow read: if isSignedIn();
-        allow write: if request.auth.uid == uid || isAdmin();
-      }
-      match /{collection}/{doc} {
-        allow read: if isSignedIn();
-        allow write: if isSignedIn();
-      }
-    }
-  }
-  ```
-  Click Publish.
+- Click Firestore Database → Create database → Start in **production mode** → Next → Done
 
 **Storage:**
 - Click Storage → Get started → Next → Done
-- Click Rules tab and paste:
-  ```
-  rules_version = '2';
-  service firebase.storage {
-    match /b/{bucket}/o {
-      match /{allPaths=**} {
-        allow read, write: if request.auth != null;
-      }
-    }
-  }
-  ```
-  Click Publish.
+
+> ⚠️ **Do NOT paste rules in the console.** The security rules live in this
+> folder (`firestore.rules` and `storage.rules`) and deploy automatically when
+> you run `npm run deploy`. Pasting rules by hand in the console will be
+> overwritten on the next deploy — and older versions of this guide contained
+> rules with security holes that have since been fixed.
 
 ---
 
