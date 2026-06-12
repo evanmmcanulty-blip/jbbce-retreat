@@ -35,12 +35,37 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState('');
+  const [needsProfile, setNeedsProfile] = useState(false);
 
   React.useEffect(() => {
     const save = () => sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ mode, email, displayName, avatar }));
     window.addEventListener('pagehide', save);
     return () => window.removeEventListener('pagehide', save);
   }, [mode, email, displayName, avatar]);
+
+  async function handleCreateProfile() {
+    if (!displayName.trim()) { setError('Enter your name so Brandon knows who you are.'); return; }
+    const uid = auth.currentUser?.uid;
+    if (!uid) { setError('Session expired — please sign in again.'); setNeedsProfile(false); return; }
+    setError(''); setLoading(true);
+    try {
+      const idx = Math.floor(Math.random() * COLORS.length);
+      await setDoc(doc(db, 'users', uid), {
+        uid, email,
+        displayName: displayName.trim(),
+        avatar: avatar.trim() || '⭐',
+        color: COLORS[idx],
+        room: '', admin: false,
+        approved: email.toLowerCase() === ADMIN_EMAIL,
+        arrivalDateRaw: '2026-06-29', departureDateRaw: '2026-07-11',
+        travelModeArr: 'Ferry (Bay State Cruises)', travelModeDep: 'Ferry (Bay State Cruises)',
+        createdAt: new Date().toISOString(),
+      });
+      sessionStorage.removeItem(DRAFT_KEY);
+    } catch (err) {
+      setError(authMsg(err));
+    } finally { setLoading(false); }
+  }
 
   async function handleReset() {
     setError(''); setResetMsg('');
@@ -77,13 +102,48 @@ export default function AuthPage() {
           createdAt: new Date().toISOString(),
         });
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const snap = await getDoc(doc(db, 'users', cred.user.uid));
+        if (!snap.exists()) {
+          setLoading(false);
+          setNeedsProfile(true);
+          return;
+        }
       }
       sessionStorage.removeItem(DRAFT_KEY);
     } catch (err) {
       setError(authMsg(err));
     } finally { setLoading(false); }
   }
+
+  if (needsProfile) return (
+    <div className="auth-page">
+      <div style={{ maxWidth: 420, width: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: 22 }}>
+          <div style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 52, color: '#1a6b8a', lineHeight: 1, letterSpacing: '0.01em', marginBottom: 10 }}>
+            The JBBCE<br />Executive Retreat
+          </div>
+        </div>
+        <div className="auth-card">
+          <h2>One more thing</h2>
+          <p className="sub">Tell us who you are so Brandon can let you in</p>
+          {error && <div className="error-msg">{error}</div>}
+          <div className="form-group">
+            <label>Your name</label>
+            <input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="e.g. Evan McAnulty" autoFocus />
+          </div>
+          <div className="form-group">
+            <label>Pick an emoji avatar</label>
+            <input value={avatar} onChange={e => setAvatar(e.target.value)}
+              placeholder="🏖️" maxLength={2} style={{ fontSize: 24, textAlign: 'center', letterSpacing: 4 }} />
+          </div>
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleCreateProfile} disabled={loading}>
+            {loading ? 'Saving…' : 'Save & continue'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="auth-page">
