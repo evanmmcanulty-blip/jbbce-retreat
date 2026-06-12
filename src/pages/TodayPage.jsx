@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent } from '../constants';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 
 export default function TodayPage() {
   const { profile } = useAuth();
@@ -57,6 +58,14 @@ export default function TodayPage() {
 
   const voteMealDoc = voteModal ? getMealDoc(voteModal.mt) : null;
 
+  // Hero sky follows the real P-town clock (June: sunrise ~5:07a, sunset ~8:20p)
+  const nowMin = today.getHours() * 60 + today.getMinutes();
+  const [sky, skyIcon] =
+    nowMin < 270 || nowMin >= 1320 ? ['sky-night', '🌙'] :
+    nowMin < 390  ? ['sky-dawn', '🌅'] :
+    nowMin < 1090 ? ['sky-day', '☀️'] :
+    nowMin < 1250 ? ['sky-golden', '🌇'] : ['sky-dusk', '🌆'];
+
   return (
     <div className="page">
       {realIdx < 0 && (
@@ -72,8 +81,8 @@ export default function TodayPage() {
         </div>
       )}
 
-      <div className="today-hero">
-        <div className="bd">{fmtFull(d)}</div>
+      <div className={`today-hero ${sky}`}>
+        <div className="bd">{fmtFull(d)} <span style={{float:'right'}}>{skyIcon}</span></div>
         <div className="dl">DAY {viewIdx+1} OF {TRIP_DAYS.length} · JBBCE EXECUTIVE RETREAT</div>
       </div>
 
@@ -129,7 +138,7 @@ export default function TodayPage() {
               <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>{ev.desc}</div>
               {ev.cost && <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>Cost: {ev.cost}</div>}
               <div style={{display:'flex',gap:4,marginTop:5,alignItems:'center',flexWrap:'wrap'}}>
-                {goingUsers.map(u => <span key={u.uid} title={u.displayName} style={{fontSize:18}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}
+                {goingUsers.map(u => <Avatar key={u.uid} user={u} size={24} />)}
                 {mine!=='none' && <span className={`badge badge-${mine==='going'?'s':mine==='maybe'?'g':'c'}`} style={{marginLeft:4}}>You: {mine}</span>}
               </div>
             </div>

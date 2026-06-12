@@ -156,6 +156,19 @@ textarea{resize:vertical;min-height:60px}
 .weather-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
 .weather-day{flex-shrink:0;border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;min-width:70px;background:#fff;cursor:pointer}
 .weather-day:hover{border-color:var(--om)}
+/* Live Provincetown sky — Today hero tracks the actual time of day */
+.today-hero{text-shadow:0 1px 2px rgba(0,0,0,.2);transition:background 1s}
+.today-hero.sky-dawn{background:linear-gradient(150deg,#2c3e6b,#8a5aaa 45%,#d4715a 80%,#c8a84b)}
+.today-hero.sky-day{background:linear-gradient(150deg,#1a6b8a,#4a9db5 65%,#8ecede)}
+.today-hero.sky-golden{background:linear-gradient(150deg,#35799a,#c8a84b 60%,#d4715a)}
+.today-hero.sky-dusk{background:linear-gradient(150deg,#1f2a52,#8a5aaa 65%,#d4715a)}
+.today-hero.sky-night{background:linear-gradient(150deg,#0f1830,#1f2a52 60%,#2c3e6b)}
+/* Little celebrations */
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(5deg)}}
+.bob{display:inline-block;animation:bob 1.6s ease-in-out infinite}
+@keyframes today-glow{0%,100%{box-shadow:0 0 0 0 rgba(200,168,75,.45)}50%{box-shadow:0 0 0 5px rgba(200,168,75,0)}}
+.day-chip.today{animation:today-glow 2.4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.bob,.day-chip.today{animation:none}.today-hero{transition:none}}
 /* Check pill */
 .check-pill{padding:5px 10px;border-radius:20px;border:1.5px solid var(--border);cursor:pointer;font-size:13px;background:#fff;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
 .check-pill.sel{background:var(--ol);border-color:var(--ocean);color:var(--ocean)}

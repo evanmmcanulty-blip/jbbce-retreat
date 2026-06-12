@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_LOCATIONS, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent, safeUrl } from '../constants';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 
 export default function EventsPage() {
   const { profile } = useAuth();
@@ -115,9 +116,7 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
             </div>
             <div className="card-sub">{ev.time?fmt12(ev.time):'TBD'}{ev.cost?` · ${ev.cost}`:''}{going.length>0?` · ${going.length} going${ev.recurring?' today':''}`:''}</div>
             <div className="avatar-row" style={{marginTop:3}}>
-              {going.map(u => (
-                <span key={u.uid} title={u.displayName} style={{fontSize:18,cursor:'default'}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>
-              ))}
+              {going.map(u => <Avatar key={u.uid} user={u} size={24} />)}
             </div>
           </div>
           <span className={`chev ${isOpen?'open':''}`}>▼</span>
@@ -143,13 +142,7 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
             <div className="avatar-row" style={{marginTop:6}}>
               {users.map(u => {
                 const s = getRsvp(ev, u.uid);
-                return (
-                  <span key={u.uid} title={`${u.displayName}: ${s==='none'?'no response':s}`}
-                    style={{fontSize:20,opacity:s==='going'?1:s==='maybe'?0.6:0.25,cursor:'default',
-                      borderBottom:s==='going'?'2px solid var(--sage)':s==='maybe'?'2px solid var(--gold)':'none'}}>
-                    {u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}
-                  </span>
-                );
+                return <Avatar key={u.uid} user={u} size={26} status={s==='none'?'out':s} />;
               })}
             </div>
 

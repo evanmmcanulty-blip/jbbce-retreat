@@ -78,7 +78,7 @@ function SettleUp({ receipts, users, profile, onLogPayment }) {
     <div className="card" style={{borderColor:'var(--ocean)'}}>
       <div className="card-body" style={{borderTop:'none',padding:'12px 14px'}}>
         <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:allSquare?0:8}}>
-          ⚖️ Settle up {allSquare && <span style={{color:'var(--sage)',fontWeight:'normal'}}>— ✓ you're all square!</span>}
+          ⚖️ Settle up {allSquare && <span style={{color:'var(--sage)',fontWeight:'normal'}}>— ✓ all square, go enjoy the beach <span className="bob">🍹</span></span>}
         </div>
         {creditorIds.map(uid => {
           const u = users.find(x => x.uid === uid);
