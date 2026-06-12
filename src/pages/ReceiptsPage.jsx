@@ -4,7 +4,9 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { db, storage } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useDoc } from '../hooks/useDoc';
 import { PAYMENT_METHODS, money } from '../constants';
+import { calcOwed } from '../utils/costEngine';
 import Modal from '../components/Modal';
 
 export default function ReceiptsPage() {
@@ -19,6 +21,7 @@ export default function ReceiptsPage() {
     <div className="page">
       <div className="section-title">Receipts</div>
       <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
+      <SettleUp receipts={receipts} users={users} profile={profile} onLogPayment={setPayModal} />
       <UploadForm profile={profile} users={users} />
       {receipts.length===0 && <div className="empty-note">No receipts yet.</div>}
       {[...receipts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r => (
@@ -27,6 +30,97 @@ export default function ReceiptsPage() {
       ))}
       {editReceipt && <EditReceiptModal r={editReceipt} users={users} onClose={()=>setEditReceipt(null)} />}
       {payModal && <LogPaymentModal r={payModal} profile={profile} users={users} onClose={()=>setPayModal(null)} />}
+    </div>
+  );
+}
+
+/* ============ SETTLE UP — one net number per person instead of receipt-by-receipt math ============ */
+function SettleUp({ receipts, users, profile, onLogPayment }) {
+  const { data: costData } = useDoc('config/cost');
+  const { docs: payDocs } = useCollection('payments');
+  if (!profile) return null;
+  const me = profile.uid;
+
+  // What I owe each uploader: even-split receipts I'm tagged in, not fully paid, nothing logged yet
+  const debts = {}; // creditorUid -> [{ r, share }]
+  let inFlight = 0;
+  const manualPending = [];
+  receipts.forEach(r => {
+    if (r.fullyPaid || r.by === me || !r.whoIds?.includes(me)) return;
+    const p = r.payments?.[me];
+    if (p?.confirmed) return;
+    if (p) { inFlight += p.amount || 0; return; }
+    if (r.split === 'even' && r.whoIds.length) {
+      (debts[r.by] = debts[r.by] || []).push({ r, share: r.amt / r.whoIds.length });
+    } else if (r.split === 'manual') {
+      manualPending.push(r);
+    }
+  });
+
+  // What's still owed to me across my open receipts
+  const owedToMe = receipts.filter(r => r.by === me && !r.fullyPaid).reduce((sum, r) => {
+    const others = (r.whoIds || []).filter(uid => uid !== me);
+    const confirmed = others.reduce((s, uid) => s + (r.payments?.[uid]?.confirmed ? (r.payments[uid].amount || 0) : 0), 0);
+    const myPortion = r.split === 'manual' ? (r.myPortion || 0) : (r.whoIds?.length ? r.amt / r.whoIds.length : 0);
+    return sum + Math.max(0, (r.amt || 0) - myPortion - confirmed);
+  }, 0);
+
+  // House fund balance (same math as House → Payments)
+  const { owe } = calcOwed(users, costData);
+  const housePaid = payDocs.find(p => p.uid === me)?.confirmed || 0;
+  const houseLeft = Math.max(0, (owe[me] || 0) - housePaid);
+
+  const creditorIds = Object.keys(debts);
+  const totalIOwe = creditorIds.reduce((s, uid) => s + debts[uid].reduce((a, d) => a + d.share, 0), 0);
+  const allSquare = !creditorIds.length && !manualPending.length && owedToMe < 0.01 && houseLeft < 0.01 && inFlight < 0.01;
+
+  return (
+    <div className="card" style={{borderColor:'var(--ocean)'}}>
+      <div className="card-body" style={{borderTop:'none',padding:'12px 14px'}}>
+        <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:allSquare?0:8}}>
+          ⚖️ Settle up {allSquare && <span style={{color:'var(--sage)',fontWeight:'normal'}}>— ✓ you're all square!</span>}
+        </div>
+        {creditorIds.map(uid => {
+          const u = users.find(x => x.uid === uid);
+          const total = debts[uid].reduce((s, d) => s + d.share, 0);
+          return (
+            <div key={uid} style={{padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
+              <div style={{fontSize:14}}>
+                You owe <b>{u?.avatar && u.avatar !== '⭐' ? u.avatar + ' ' : ''}{u?.displayName || '?'}</b>{' '}
+                <b style={{color:'var(--coral)'}}>{money(total)}</b>
+                {debts[uid].length > 1 && <span style={{fontSize:12,color:'var(--muted)'}}> across {debts[uid].length} receipts</span>}
+              </div>
+              <div className="btn-row" style={{marginTop:4}}>
+                {debts[uid].map(({ r, share }) => (
+                  <button key={r.id} className="btn-mini" onClick={() => onLogPayment(r)}>
+                    💸 {money(share)} — {r.desc}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+        {manualPending.length > 0 && (
+          <div style={{fontSize:12,color:'var(--gold)',padding:'5px 0'}}>
+            ✍️ {manualPending.length} manual-split receipt{manualPending.length > 1 ? 's' : ''} waiting for you to enter your portion:{' '}
+            {manualPending.map(r => (
+              <button key={r.id} className="btn-mini" style={{marginRight:4}} onClick={() => onLogPayment(r)}>{r.desc}</button>
+            ))}
+          </div>
+        )}
+        {inFlight > 0.01 && (
+          <div style={{fontSize:12,color:'var(--muted)',padding:'5px 0'}}>⏳ {money(inFlight)} sent, waiting on confirmation</div>
+        )}
+        {owedToMe > 0.01 && (
+          <div style={{fontSize:13,padding:'5px 0'}}>Owed to you from your receipts: <b style={{color:'var(--sage)'}}>{money(owedToMe)}</b></div>
+        )}
+        {houseLeft > 0.01 && (
+          <div style={{fontSize:13,padding:'5px 0'}}>🏠 House fund: <b style={{color:'var(--coral)'}}>{money(houseLeft)}</b> left to send Chris — see House → Payments</div>
+        )}
+        {!allSquare && totalIOwe > 0.01 && (
+          <div style={{fontSize:12,color:'var(--muted)',marginTop:6}}>Tap a receipt to log your payment — the amount is prefilled.</div>
+        )}
+      </div>
     </div>
   );
 }
