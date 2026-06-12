@@ -1,0 +1,266 @@
+import React, { useState } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../hooks/useAuth';
+import { useCollection } from '../hooks/useCollection';
+import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
+
+export default function SettingsPage() {
+  const { profile } = useAuth();
+  const { docs: users } = useCollection('users');
+  const isAdmin = profile?.admin;
+  const [sub, setSub] = useState('me');
+
+  return (
+    <div className="page">
+      <div className="stabs">
+        <button className={`stab ${sub==='me'?'active':''}`} onClick={()=>setSub('me')}>👤 My Profile</button>
+        <button className={`stab ${sub==='arrivals'?'active':''}`} onClick={()=>setSub('arrivals')}>✈ Arrivals</button>
+        <button className={`stab ${sub==='departures'?'active':''}`} onClick={()=>setSub('departures')}>🚪 Departures</button>
+        <button className={`stab ${sub==='guests'?'active':''}`} onClick={()=>setSub('guests')}>👥 Guests & Rooms</button>
+        {isAdmin && <button className={`stab ${sub==='admin'?'active':''}`} onClick={()=>setSub('admin')}>⚙ Admin</button>}
+      </div>
+      {sub==='me' && <MyProfile profile={profile} />}
+      {sub==='arrivals' && <TravelTab kind="arr" users={users} profile={profile} isAdmin={isAdmin} />}
+      {sub==='departures' && <TravelTab kind="dep" users={users} profile={profile} isAdmin={isAdmin} />}
+      {sub==='guests' && <GuestsTab users={users} isAdmin={isAdmin} />}
+      {isAdmin && sub==='admin' && <AdminTab users={users} profile={profile} />}
+    </div>
+  );
+}
+
+function MyProfile({ profile }) {
+  const [avatar, setAvatar] = useState(profile?.avatar || '');
+  const [displayName, setDisplayName] = useState(profile?.displayName || '');
+  const [fullName, setFullName] = useState(profile?.fullName || profile?.displayName || '');
+  const [saved, setSaved] = useState(false);
+  const roomName = ROOMS.find(r => r.id === profile?.room)?.name;
+
+  async function save() {
+    await updateDoc(doc(db, 'users', profile.uid), {
+      avatar: avatar.trim() || '⭐',
+      displayName: displayName.trim(),
+      fullName: fullName.trim(),
+    });
+    setSaved(true); setTimeout(() => setSaved(false), 2500);
+  }
+
+  return (
+    <div>
+      <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:16 }}>
+        <span style={{ fontSize:42 }}>{profile?.avatar && profile.avatar!=='⭐' ? profile.avatar : '👤'}</span>
+        <div>
+          <div style={{ fontSize:18,fontWeight:'bold' }}>{profile?.displayName || profile?.email}</div>
+          <div style={{ fontSize:12,color:'var(--muted)' }}>{profile?.email}</div>
+          <div style={{ fontSize:13,color:'var(--ocean)',fontWeight:'bold',marginTop:2 }}>
+            {roomName ? `🛏 ${roomName}` : 'No room assigned yet'}
+          </div>
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Display name (what everyone sees)</label>
+        <input value={displayName} onChange={e=>setDisplayName(e.target.value)} placeholder="e.g. Brandon N" />
+      </div>
+      <div className="form-group">
+        <label>Full name</label>
+        <input value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="e.g. Brandon Nwokocha" />
+      </div>
+      <div className="form-group">
+        <label>Your avatar — type any emoji</label>
+        <input value={avatar} onChange={e=>setAvatar(e.target.value)} maxLength={4}
+          style={{ fontSize:28,textAlign:'center' }} placeholder="🏖️" />
+        <div style={{ fontSize:11,color:'var(--muted)',marginTop:3 }}>
+          iPhone: tap 🌐 key · Android: emoji button · Mac: ⌘+Ctrl+Space · Windows: Win+.
+        </div>
+      </div>
+      <button className="btn btn-primary" onClick={save}>{saved ? 'Saved! ✓' : 'Save changes'}</button>
+    </div>
+  );
+}
+
+function TravelTab({ kind, users, profile, isAdmin }) {
+  const [editUid, setEditUid] = useState(null);
+  const [form, setForm] = useState({});
+  const [error, setError] = useState('');
+  const [savedUid, setSavedUid] = useState(null);
+  const MODES = kind==='arr' ? TRAVEL_MODES_ARR : TRAVEL_MODES_DEP;
+  const needsFlight = m => /Flight/i.test(m||'');
+  const needsFerry = m => /Ferry/i.test(m||'');
+
+  function startEdit(u) {
+    setError('');
+    setEditUid(u.uid);
+    setForm(kind==='arr' ? {
+      mode: u.travelModeArr || TRAVEL_MODES_ARR[0],
+      dateRaw: u.arrivalDateRaw || '',
+      time: u.arrivalTime || '',
+      ferry: u.arrivalFerry || '',
+      flightNum: u.arrivalFlight || '',
+      notes: u.arrivalNotes || '',
+    } : {
+      mode: u.travelModeDep || TRAVEL_MODES_DEP[0],
+      dateRaw: u.departureDateRaw || '',
+      time: u.departureTime || '',
+      ferry: u.departureFerry || '',
+      flightNum: u.departureFlight || '',
+      notes: u.departureNotes || '',
+    });
+  }
+
+  async function save(uid) {
+    // REQUIRED DATE VALIDATION
+    if (!form.dateRaw) {
+      setError(kind==='arr' ? '⚠️ Arrival date missing — date is required to save.' : '⚠️ Departure date is required to save.');
+      return;
+    }
+    setError('');
+    const upd = kind==='arr' ? {
+      travelModeArr: form.mode, arrivalDateRaw: form.dateRaw, arrivalTime: form.time,
+      arrivalFerry: form.ferry, arrivalFlight: form.flightNum, arrivalNotes: form.notes,
+    } : {
+      travelModeDep: form.mode, departureDateRaw: form.dateRaw, departureTime: form.time,
+      departureFerry: form.ferry, departureFlight: form.flightNum, departureNotes: form.notes,
+    };
+    await updateDoc(doc(db, 'users', uid), upd);
+    setSavedUid(uid);
+    setTimeout(() => setSavedUid(null), 2000);
+    setEditUid(null);
+  }
+
+  return (
+    <div>
+      <div className="section-sub">{kind==='arr'?'Arrivals':'Departures'} — tap a card to edit (yours, or anyone's if admin). Dates drive the cost split.</div>
+      {users.map(u => {
+        const canEdit = u.uid === profile?.uid || isAdmin;
+        const dateRaw = kind==='arr' ? u.arrivalDateRaw : u.departureDateRaw;
+        const time = kind==='arr' ? u.arrivalTime : u.departureTime;
+        const mode = kind==='arr' ? u.travelModeArr : u.travelModeDep;
+        const flight = kind==='arr' ? u.arrivalFlight : u.departureFlight;
+        const ferry = kind==='arr' ? u.arrivalFerry : u.departureFerry;
+        const notes = kind==='arr' ? u.arrivalNotes : u.departureNotes;
+        const isEditing = editUid === u.uid;
+        return (
+          <div key={u.uid} className="card">
+            <div className="card-head" onClick={() => canEdit && (isEditing ? setEditUid(null) : startEdit(u))}>
+              <div>
+                <div className="card-title" style={{display:'flex',alignItems:'center',gap:8}}>
+                  <span style={{fontSize:20}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'}</span>
+                  {u.displayName}
+                  {savedUid===u.uid && <span className="badge badge-s">Saved ✓</span>}
+                </div>
+                <div className="card-sub">
+                  {mode || 'Not set'}{dateRaw ? ` · ${dateRaw}` : ' · ⚠️ no date set'}{time ? ` · ${time}` : ''}
+                </div>
+                {flight && needsFlight(mode) && (
+                  <div style={{fontSize:11,marginTop:2}}>
+                    ✈ {flight} ·{' '}
+                    <a href={`https://www.google.com/search?q=flight+${encodeURIComponent(flight)}+status`} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{color:'var(--ocean)'}}>status ↗</a>
+                  </div>
+                )}
+                {ferry && needsFerry(mode) && <div style={{fontSize:11,marginTop:2}}>⛴ {ferry}</div>}
+                {notes && <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>{notes}</div>}
+              </div>
+              {canEdit && <span className={`chev ${isEditing?'open':''}`}>▼</span>}
+            </div>
+            {isEditing && canEdit && (
+              <div className="card-body" style={{paddingTop:12}}>
+                {error && <div className="error-msg">{error}</div>}
+                <div className="form-group"><label>Mode</label>
+                  <select value={form.mode} onChange={e=>setForm(f=>({...f,mode:e.target.value}))}>
+                    {MODES.map(m => <option key={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div className="grid2">
+                  <div className="form-group">
+                    <label>{kind==='arr'?'Arrival date':'Departure date'} <span style={{color:'var(--coral)'}}>*required</span></label>
+                    <input type="date" value={form.dateRaw} min="2026-06-29" max="2026-07-11"
+                      onChange={e=>setForm(f=>({...f,dateRaw:e.target.value}))} />
+                  </div>
+                  <div className="form-group"><label>Time (optional)</label>
+                    <input type="time" value={form.time} onChange={e=>setForm(f=>({...f,time:e.target.value}))} />
+                  </div>
+                </div>
+                {needsFerry(form.mode) && (
+                  <div className="form-group"><label>Ferry details (optional)</label>
+                    <input value={form.ferry} onChange={e=>setForm(f=>({...f,ferry:e.target.value}))} placeholder="e.g. Bay State 3:30pm from WTC" />
+                  </div>
+                )}
+                {needsFlight(form.mode) && (
+                  <div className="form-group"><label>Flight number (optional)</label>
+                    <input value={form.flightNum} onChange={e=>setForm(f=>({...f,flightNum:e.target.value}))} placeholder="e.g. 9K 123" />
+                  </div>
+                )}
+                <div className="form-group"><label>Notes</label>
+                  <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} />
+                </div>
+                <div className="btn-row">
+                  <button className="btn btn-primary" onClick={()=>save(u.uid)}>Save</button>
+                  <button className="btn-mini" onClick={()=>{setEditUid(null);setError('');}}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function GuestsTab({ users, isAdmin }) {
+  async function setRoom(uid, room) { await updateDoc(doc(db,'users',uid), { room }); }
+  return (
+    <div>
+      <div className="section-sub">{isAdmin ? 'Assign rooms — the cost split updates instantly.' : 'Current room assignments:'}</div>
+      {ROOMS.map(rm => {
+        const occ = users.filter(u => u.room === rm.id);
+        return (
+          <div key={rm.id} className="card">
+            <div className="card-body" style={{borderTop:'none',padding:'11px 14px'}}>
+              <b>{rm.name}</b>
+              <div style={{marginTop:5,display:'flex',gap:8,flexWrap:'wrap'}}>
+                {occ.length ? occ.map(u => (
+                  <span key={u.uid} className="check-pill sel" style={{cursor:'default'}}>
+                    {u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}
+                  </span>
+                )) : <span style={{fontSize:13,color:'var(--muted)'}}>Empty — open nights absorbed by occupied rooms</span>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      {isAdmin && (
+        <div style={{marginTop:14}}>
+          <div className="info-head">ASSIGN ROOMS</div>
+          {users.map(u => (
+            <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'7px 0',borderBottom:'1px solid var(--border)'}}>
+              <span style={{fontSize:15}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}</span>
+              <select style={{width:140}} value={u.room||''} onChange={e=>setRoom(u.uid, e.target.value)}>
+                <option value="">No room</option>
+                {ROOMS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          ))}
+          <div className="tip-box" style={{marginTop:10}}>💡 Fill-in guest taking over a vacated room? Assign them the room here and set their arrival date in Arrivals — the cost engine handles the rest.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AdminTab({ users, profile }) {
+  async function toggleAdmin(uid, cur) { await updateDoc(doc(db,'users',uid), { admin: !cur }); }
+  return (
+    <div>
+      <div className="section-sub">Toggle admin for other users. Admins can edit/delete anything and manage rooms.</div>
+      {users.filter(u => u.uid !== profile.uid).map(u => (
+        <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+          <span style={{fontSize:16}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}</span>
+          <button className="btn-mini" style={u.admin?{borderColor:'var(--sage)',color:'var(--sage)'}:{}}
+            onClick={()=>toggleAdmin(u.uid, u.admin)}>
+            {u.admin ? '✓ Admin — remove' : 'Make admin'}
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
