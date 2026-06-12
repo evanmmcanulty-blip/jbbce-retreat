@@ -10,6 +10,7 @@ import HousePage from './pages/HousePage';
 import ReceiptsPage from './pages/ReceiptsPage';
 import InfoPage from './pages/InfoPage';
 import SettingsPage from './pages/SettingsPage';
+import Avatar from './components/Avatar';
 import './styles.css';
 
 function AppShell() {
@@ -71,7 +72,7 @@ function AppShell() {
 
       {/* User bar — name + avatar + gear on top */}
       <div className="user-bar">
-        <span style={{fontSize:20}}>{profile?.avatar && profile.avatar!=='⭐' ? profile.avatar : '👤'}</span>
+        <Avatar user={profile} size={24} />
         <span style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14}}>{profile?.displayName || profile?.email}</span>
         <button className="btn-mini" style={{marginLeft:'auto',fontSize:16,padding:'4px 10px'}}
           title="My settings" onClick={() => setTab('settings')}>⚙️</button>

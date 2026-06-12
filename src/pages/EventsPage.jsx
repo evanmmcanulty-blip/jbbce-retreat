@@ -279,8 +279,8 @@ function IdeasSidebar({ ideas, users, profile, isAdmin }) {
         <div style={{fontWeight:'bold',fontSize:13}}>{idea.title}</div>
         <div style={{fontSize:11,color:'var(--muted)'}}>by {idea.byName}</div>
         <div style={{fontSize:11,margin:'4px 0',display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
-          <span>👍 {yesUsers.map(u=><span key={u.uid} title={u.displayName}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}{yesUsers.length===0&&'0'}</span>
-          <span>👎 {noUsers.map(u=><span key={u.uid} title={u.displayName}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'}</span>)}{noUsers.length===0&&'0'}</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:2}}>👍 {yesUsers.map(u=><Avatar key={u.uid} user={u} size={17} />)}{yesUsers.length===0&&'0'}</span>
+          <span style={{display:'inline-flex',alignItems:'center',gap:2}}>👎 {noUsers.map(u=><Avatar key={u.uid} user={u} size={17} />)}{noUsers.length===0&&'0'}</span>
         </div>
         {mv && <div style={{fontSize:10,color:'var(--ocean)',marginBottom:4}}>Your vote: {mv==='yes'?'👍 Yes':'👎 No'}</div>}
         <div className="btn-row">
@@ -423,8 +423,8 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
                   {(idea.comments||[]).map((c,i) => {
                     const cu = users.find(u=>u.uid===c.by);
                     return (
-                      <div key={i} style={{fontSize:12,padding:'5px 0',borderBottom:'1px solid var(--border)'}}>
-                        <span style={{fontSize:15}}>{cu?.avatar&&cu.avatar!=='⭐'?cu.avatar:'👤'}</span> <b>{c.byName}:</b> {c.text}
+                      <div key={i} style={{fontSize:12,padding:'5px 0',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'baseline',gap:5}}>
+                        <Avatar user={cu} size={18} /> <span><b>{c.byName}:</b> {c.text}</span>
                       </div>
                     );
                   })}

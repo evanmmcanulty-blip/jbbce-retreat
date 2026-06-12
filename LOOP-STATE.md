@@ -21,4 +21,5 @@ Build check: `CI=true npx react-scripts build` (must pass before commit). App is
 ## Cycle 1 complete.
 ## Cycle 2 complete (commit 718f166): unseen-announcement badge on Info tab, "leading · N of M votes" meal tallies, inline payments editor (no more window.prompt anywhere money-related), Forecast→Typical late June, Avatar sweep at vote modals/ideas/bulletins/payments.
   - Audit re-check of all write paths vs new rules: consistent. Iceberg re-run: nothing new at waterline.
-## Cycle 3: convergence check. If nothing meaningful → end loop (no ScheduleWakeup), final summary MUST include the OWNER ACTIONS from /audit + /iceberg above.
+## Cycle 3 complete (commit f6044ce): user said "keep it going" at convergence — shipped Today comings-&-goings board (arrivals/departures from existing travel data), next-up badge, ideas comment-bleed fix. Accretive Lens A/B declined this cycle otherwise; audit/iceberg re-checks clean.
+## Cycle 4: second convergence check. Remaining known-low-value: photo wall (scope creep), push notifications (out of proportion), leftover 👤 sites (user-bar, receipts present list, grocery claimer, cooks, comments), AvatarRow dead code. If nothing clears the bar → end loop, final summary MUST include OWNER ACTIONS from /audit + /iceberg above.

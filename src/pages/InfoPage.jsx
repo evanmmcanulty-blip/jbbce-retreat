@@ -166,7 +166,7 @@ function GroceryList({ profile, isAdmin }) {
             </div>
             {claimer ? (
               <span className="badge badge-s" style={{display:'flex',alignItems:'center',gap:4}}>
-                {claimer.avatar&&claimer.avatar!=='⭐'?claimer.avatar:'👤'} {claimer.displayName?.split(' ')[0]} is getting it
+                <Avatar user={claimer} size={18} /> {claimer.displayName?.split(' ')[0]} is getting it
               </span>
             ) : (
               <span style={{fontSize:12,color:'var(--muted)'}}>unclaimed</span>

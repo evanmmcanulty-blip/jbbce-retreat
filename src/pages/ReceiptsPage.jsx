@@ -8,6 +8,7 @@ import { useDoc } from '../hooks/useDoc';
 import { PAYMENT_METHODS, money } from '../constants';
 import { calcOwed } from '../utils/costEngine';
 import Modal from '../components/Modal';
+import Avatar from '../components/Avatar';
 
 export default function ReceiptsPage() {
   const { profile } = useAuth();
@@ -85,8 +86,8 @@ function SettleUp({ receipts, users, profile, onLogPayment }) {
           const total = debts[uid].reduce((s, d) => s + d.share, 0);
           return (
             <div key={uid} style={{padding:'6px 0',borderBottom:'1px solid var(--border)'}}>
-              <div style={{fontSize:14}}>
-                You owe <b>{u?.avatar && u.avatar !== '⭐' ? u.avatar + ' ' : ''}{u?.displayName || '?'}</b>{' '}
+              <div style={{fontSize:14,display:'flex',alignItems:'center',gap:5,flexWrap:'wrap'}}>
+                You owe <Avatar user={u} size={20} /> <b>{u?.displayName || '?'}</b>{' '}
                 <b style={{color:'var(--coral)'}}>{money(total)}</b>
                 {debts[uid].length > 1 && <span style={{fontSize:12,color:'var(--muted)'}}> across {debts[uid].length} receipts</span>}
               </div>
@@ -255,9 +256,11 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
           {money(r.amt)} total · {r.split==='even'?'even split':'manual split'} · by <b>{r.byName}</b> · {new Date(r.date).toLocaleDateString()}
         </div>
         {r.payMethods?.length>0 && <div style={{fontSize:12,marginTop:2}}>{r.byName} accepts: <b>{r.payMethods.join(' / ')}</b></div>}
-        <div style={{fontSize:12,marginTop:3}}>
+        <div style={{fontSize:12,marginTop:3,display:'flex',alignItems:'center',gap:7,flexWrap:'wrap'}}>
           Present: {whoUsers.map(u => (
-            <span key={u.uid} title={u.displayName} style={{marginRight:4}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'} {u.displayName?.split(' ')[0]}</span>
+            <span key={u.uid} style={{display:'inline-flex',alignItems:'center',gap:3}}>
+              <Avatar user={u} size={18} /> {u.displayName?.split(' ')[0]}
+            </span>
           ))}
         </div>
         {evenShare!=null && <div style={{fontSize:12,marginTop:2}}>Each person's share: <b>{money(evenShare)}</b></div>}

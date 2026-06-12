@@ -4,6 +4,7 @@ import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
+import Avatar from '../components/Avatar';
 
 export default function SettingsPage() {
   const { profile } = useAuth();
@@ -144,7 +145,7 @@ function TravelTab({ kind, users, profile, isAdmin }) {
             <div className="card-head" onClick={() => canEdit && (isEditing ? setEditUid(null) : startEdit(u))}>
               <div>
                 <div className="card-title" style={{display:'flex',alignItems:'center',gap:8}}>
-                  <span style={{fontSize:20}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'}</span>
+                  <Avatar user={u} size={24} />
                   {u.displayName}
                   {savedUid===u.uid && <span className="badge badge-s">Saved ✓</span>}
                 </div>
