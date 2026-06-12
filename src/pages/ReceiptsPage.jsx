@@ -288,7 +288,7 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
                 {/* Uploader confirms or logs on behalf */}
                 {iOwn && p && !p.confirmed && (
                   <button className="btn-mini" style={{fontSize:11,padding:'2px 8px'}}
-                    onClick={async()=>await updateDoc(doc(db,'receipts',r.id),{[`payments.${uid}.confirmed`]:true})}>
+                    onClick={async()=>{try{await updateDoc(doc(db,'receipts',r.id),{[`payments.${uid}.confirmed`]:true})}catch{alert('Couldn\'t save — check connection.');}}}>
                     Confirm received
                   </button>
                 )}
@@ -298,7 +298,7 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
                       const amt = parseFloat(window.prompt(`How much did ${u.displayName} pay you?`));
                       if (isNaN(amt)) return;
                       const method = window.prompt(`How? (${PAYMENT_METHODS.join(' / ')})`, 'Apple Pay') || 'Cash';
-                      await updateDoc(doc(db,'receipts',r.id),{[`payments.${uid}`]:{amount:amt,method,confirmed:true,loggedBy:profile.uid}});
+                      try{await updateDoc(doc(db,'receipts',r.id),{[`payments.${uid}`]:{amount:amt,method,confirmed:true,loggedBy:profile.uid}})}catch{alert('Couldn\'t save — check connection.');}
                     }}>
                     Log their payment
                   </button>
@@ -319,13 +319,13 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
             <>
               <button className="btn-mini" onClick={onEdit}>✏️ Edit receipt</button>
               <button className="btn-mini" style={r.fullyPaid?{borderColor:'var(--sage)',color:'var(--sage)'}:{}}
-                onClick={async()=>await updateDoc(doc(db,'receipts',r.id),{fullyPaid:!r.fullyPaid})}>
+                onClick={async()=>{try{await updateDoc(doc(db,'receipts',r.id),{fullyPaid:!r.fullyPaid})}catch{alert('Couldn\'t save — check connection.');}}}>
                 {r.fullyPaid?'✓ Marked fully paid (undo)':'Mark fully paid ✓'}
               </button>
             </>
           )}
           {(iOwn||isAdmin) && (
-            <button className="btn btn-danger" onClick={async()=>{if(window.confirm('Delete this receipt?'))await deleteDoc(doc(db,'receipts',r.id));}}>🗑</button>
+            <button className="btn btn-danger" onClick={async()=>{if(window.confirm('Delete this receipt?'))try{await deleteDoc(doc(db,'receipts',r.id))}catch{alert('Delete failed — check connection.');}}}>🗑</button>
           )}
         </div>
       </div>
@@ -342,10 +342,14 @@ function LogPaymentModal({ r, profile, users, onClose }) {
   async function submit() {
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) { alert('Enter how much you\'re sending'); return; }
-    await updateDoc(doc(db,'receipts',r.id), {
-      [`payments.${profile.uid}`]: { amount: amt, method, confirmed: false, at: new Date().toISOString() }
-    });
-    onClose();
+    try {
+      await updateDoc(doc(db,'receipts',r.id), {
+        [`payments.${profile.uid}`]: { amount: amt, method, confirmed: false, at: new Date().toISOString() }
+      });
+      onClose();
+    } catch {
+      alert('Payment didn\'t save — check your connection and try again.');
+    }
   }
 
   return (
@@ -377,12 +381,16 @@ function EditReceiptModal({ r, users, onClose }) {
   function toggle(k, val) { setForm(f=>({...f,[k]:f[k].includes(val)?f[k].filter(x=>x!==val):[...f[k],val]})); }
 
   async function save() {
-    await updateDoc(doc(db,'receipts',r.id), {
-      desc: form.desc, amt: parseFloat(form.amt)||0, split: form.split,
-      payMethods: form.payMethods, whoIds: form.whoIds,
-      myPortion: form.split==='manual' ? (parseFloat(form.myPortion)||0) : null,
-    });
-    onClose();
+    try {
+      await updateDoc(doc(db,'receipts',r.id), {
+        desc: form.desc, amt: parseFloat(form.amt)||0, split: form.split,
+        payMethods: form.payMethods, whoIds: form.whoIds,
+        myPortion: form.split==='manual' ? (parseFloat(form.myPortion)||0) : null,
+      });
+      onClose();
+    } catch {
+      alert('Edit didn\'t save — check your connection and try again.');
+    }
   }
 
   return (

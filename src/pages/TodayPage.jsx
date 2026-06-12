@@ -17,6 +17,7 @@ export default function TodayPage() {
   const [viewIdx, setViewIdx] = useState(realIdx >= 0 ? realIdx : 0);
   const [voteModal, setVoteModal] = useState(null);
   const [pendingVote, setPendingVote] = useState('');
+  const [flashMeal, setFlashMeal] = useState(null);
 
   const d = TRIP_DAYS[viewIdx];
   const beforeTrip = today < TRIP_DAYS[0];
@@ -53,8 +54,15 @@ export default function TodayPage() {
   }
   async function submitVote() {
     if (!pendingVote || !voteModal) return;
-    await setDoc(doc(db,'meals',`${voteModal.mt}-${viewIdx}`), { votes: { [profile.uid]: pendingVote } }, { merge: true });
-    setVoteModal(null); setPendingVote('');
+    const mt = voteModal.mt;
+    try {
+      await setDoc(doc(db,'meals',`${mt}-${viewIdx}`), { votes: { [profile.uid]: pendingVote } }, { merge: true });
+      setVoteModal(null); setPendingVote('');
+      setFlashMeal(mt);
+      setTimeout(() => setFlashMeal(null), 700);
+    } catch {
+      alert('Vote didn\'t save — check your connection and try again.');
+    }
   }
 
   const voteMealDoc = voteModal ? getMealDoc(voteModal.mt) : null;
@@ -101,7 +109,7 @@ export default function TodayPage() {
       )}
 
       <div className={`today-hero ${sky}`}>
-        <div className="bd">{fmtFull(d)} <span style={{float:'right'}}>{skyIcon}</span></div>
+        <div className="bd"><span>{fmtFull(d)}</span><span>{skyIcon}</span></div>
         <div className="dl">DAY {viewIdx+1} OF {TRIP_DAYS.length} · JBBCE EXECUTIVE RETREAT</div>
       </div>
 
@@ -143,7 +151,7 @@ export default function TodayPage() {
           const winner = getWinner(mt);
           const cooks = cooksLine(mt);
           return (
-            <div key={mt} className={`meal-card ${myVote?'voted':'no-vote'}`}
+            <div key={mt} className={`meal-card ${myVote?'voted':'no-vote'} ${flashMeal===mt?'flash':''}`}
               onClick={()=>{setVoteModal({mt});setPendingVote(myVote||'');}}>
               <div className="mc-label">{mt.toUpperCase()}</div>
               <div className="mc-plan">{cooks || (winner ? winner.opt.label : 'No plan yet')}</div>

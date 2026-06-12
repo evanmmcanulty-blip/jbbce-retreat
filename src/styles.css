@@ -10,10 +10,10 @@
   --font-body:'Barlow',system-ui,sans-serif;
   --font-label:'Barlow Condensed',system-ui,sans-serif;
 }
-body{font-family:var(--font-body);background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5}
+body{font-family:var(--font-body);background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
 /* Masthead — faux-resort letterhead: big italic display vs tiny tracked caps */
-.hero{background:linear-gradient(165deg,#12506b,#1a6b8a 55%,#23789c);color:#fff;padding:22px 20px 15px;text-align:center}
-.hero h1{font-family:var(--font-display);font-size:30px;font-style:normal;font-weight:400;margin-bottom:6px;letter-spacing:.02em;line-height:1}
+.hero{background:linear-gradient(165deg,#12506b,#1a6b8a 55%,#23789c);color:#fff;padding:26px 20px 18px;text-align:center}
+.hero h1{font-family:var(--font-display);font-size:36px;font-style:normal;font-weight:400;margin-bottom:6px;letter-spacing:.02em;line-height:1}
 .hero .sub{font-size:10px;opacity:.85;letter-spacing:.22em;display:flex;align-items:center;justify-content:center;gap:10px}
 .hero .sub::before,.hero .sub::after{content:'';height:1px;width:30px;background:rgba(255,255,255,.4);flex-shrink:0}
 .hero .ac{font-size:10px;opacity:.55;margin-top:5px;font-style:italic;letter-spacing:.04em}
@@ -23,7 +23,7 @@ body{font-family:var(--font-body);background:#f5f0e8;color:var(--text);font-size
 .nav-btn{color:rgba(255,255,255,.7);font-size:13px;padding:10px 12px;cursor:pointer;border:none;background:none;font-family:var(--font-label);letter-spacing:.04em;transition:all .15s;border-bottom:2px solid transparent;flex-shrink:0}
 .nav.sec .nav-btn{padding:8px 12px;font-size:12px}
 .nav-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
-.nav-btn.active{color:#fff;border-bottom:2px solid #c8a84b}
+.nav-btn.active{color:#fff;border-bottom:3px solid #c8a84b;background:rgba(255,255,255,.12)}
 .user-bar{background:#fff;border-bottom:1px solid var(--border);padding:7px 15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .page{max-width:900px;margin:0 auto;padding:18px 14px 70px}
 .card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);margin-bottom:12px;overflow:hidden}
@@ -64,7 +64,7 @@ textarea{resize:vertical;min-height:60px}
 .tip-box{background:var(--gl);border:1px solid var(--gold);border-radius:8px;padding:9px 12px;font-size:12px;color:#6a5215;line-height:1.5}
 .info-head{font-family:var(--font-label);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;margin-top:18px}
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
-.section-title{font-family:var(--font-display);font-size:24px;font-style:normal;font-weight:400;letter-spacing:.02em;margin-bottom:5px;color:var(--ocean);line-height:1.1}
+.section-title{font-family:var(--font-display);font-size:28px;font-style:normal;font-weight:400;letter-spacing:.02em;margin-bottom:5px;color:var(--ocean);line-height:1.1}
 .section-sub{font-size:14px;color:var(--muted);margin-bottom:14px}
 .empty-note{color:var(--muted);font-size:13px;font-style:italic;padding:16px 0;text-align:center}
 /* Avatar */
@@ -85,7 +85,7 @@ textarea{resize:vertical;min-height:60px}
 .day-strip{display:flex;gap:5px;overflow-x:auto;padding-bottom:7px;margin-bottom:12px}
 .day-chip{flex-shrink:0;border:1.5px solid var(--border);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer;background:#fff;min-width:52px;transition:all .15s}
 .day-chip:hover{border-color:var(--om)}
-.day-chip.active{background:var(--ocean);color:#fff;border-color:var(--ocean);transform:scale(1.08);box-shadow:0 3px 10px rgba(26,107,138,.35)}
+.day-chip.active{background:var(--ocean);color:#fff;border-color:var(--ocean);transform:scale(1.1);box-shadow:0 4px 14px rgba(26,107,138,.45)}
 .day-chip.today{border-color:var(--gold);border-width:2px}
 .day-chip .dow{font-size:10px;opacity:.8;letter-spacing:.06em}
 .day-chip .dn{font-size:17px;font-weight:bold;line-height:1.2}
@@ -162,8 +162,8 @@ textarea{resize:vertical;min-height:60px}
 .weather-day{flex-shrink:0;border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;min-width:70px;background:#fff;cursor:pointer}
 .weather-day:hover{border-color:var(--om)}
 /* Live Provincetown sky — Today hero tracks the actual time of day */
-.today-hero{text-shadow:0 1px 2px rgba(0,0,0,.2);transition:background 1s;padding:19px 18px}
-.today-hero .bd{font-size:28px;line-height:1}
+.today-hero{text-shadow:0 1px 2px rgba(0,0,0,.2);transition:background 1s;padding:24px 18px}
+.today-hero .bd{font-size:40px;line-height:1;display:flex;justify-content:space-between;align-items:baseline}
 .today-hero .dl{letter-spacing:.2em;font-size:10px;margin-top:5px}
 .today-hero.sky-dawn{background:linear-gradient(150deg,#2c3e6b,#8a5aaa 45%,#d4715a 80%,#c8a84b)}
 .today-hero.sky-day{background:linear-gradient(150deg,#1a6b8a,#4a9db5 65%,#8ecede)}
@@ -176,6 +176,16 @@ textarea{resize:vertical;min-height:60px}
 @keyframes today-glow{0%,100%{box-shadow:0 0 0 0 rgba(200,168,75,.45)}50%{box-shadow:0 0 0 5px rgba(200,168,75,0)}}
 .day-chip.today{animation:today-glow 2.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.bob,.day-chip.today{animation:none}.today-hero{transition:none}}
+/* Press feel — mirror the physical gesture on mobile */
+.btn:active,.btn-mini:active,.btn-danger:active{transform:translateY(1px);opacity:.85}
+.rsvp-btn:active{transform:scale(.94)}
+.meal-card:active{transform:scale(.97)}
+.nav-btn:active{opacity:.7}
+.day-chip:active{transform:scale(.95)}
+/* Meal vote flash */
+@keyframes vote-confirm{0%{box-shadow:0 0 0 0 rgba(106,140,90,.7)}70%{box-shadow:0 0 0 8px rgba(106,140,90,0)}100%{box-shadow:0 0 0 0 rgba(106,140,90,0)}}
+.meal-card.flash{animation:vote-confirm .6s ease-out}
+@media(prefers-reduced-motion:reduce){.meal-card.flash{animation:none}}
 /* Check pill */
 .check-pill{padding:5px 10px;border-radius:20px;border:1.5px solid var(--border);cursor:pointer;font-size:13px;background:#fff;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
 .check-pill.sel{background:var(--ol);border-color:var(--ocean);color:var(--ocean)}

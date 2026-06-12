@@ -83,10 +83,14 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
     return ev.rsvps?.[uid] || 'none';
   }
   async function setRsvp(ev, status) {
-    if (ev.recurring) {
-      await updateDoc(doc(db,'events',ev.id), { [`rsvpsByDay.${selDay}.${profile.uid}`]: status });
-    } else {
-      await updateDoc(doc(db,'events',ev.id), { [`rsvps.${profile.uid}`]: status });
+    try {
+      if (ev.recurring) {
+        await updateDoc(doc(db,'events',ev.id), { [`rsvpsByDay.${selDay}.${profile.uid}`]: status });
+      } else {
+        await updateDoc(doc(db,'events',ev.id), { [`rsvps.${profile.uid}`]: status });
+      }
+    } catch {
+      alert('RSVP didn\'t save — check your connection and try again.');
     }
   }
   async function duplicateEvent(ev, dayIdx) {

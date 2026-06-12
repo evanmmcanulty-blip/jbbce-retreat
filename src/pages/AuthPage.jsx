@@ -23,15 +23,24 @@ const authMsg = err =>
   err.message.replace('Firebase: ', '').replace(/\(auth.*\)\.?/, '').trim() ||
   'Something went wrong — try again.';
 
+const DRAFT_KEY = 'auth_draft';
+
 export default function AuthPage() {
-  const [mode, setMode] = useState('login');
-  const [email, setEmail] = useState('');
+  const saved = (() => { try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null'); } catch { return null; } })();
+  const [mode, setMode] = useState(saved?.mode || 'login');
+  const [email, setEmail] = useState(saved?.email || '');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [avatar, setAvatar] = useState('');
+  const [displayName, setDisplayName] = useState(saved?.displayName || '');
+  const [avatar, setAvatar] = useState(saved?.avatar || '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState('');
+
+  React.useEffect(() => {
+    const save = () => sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ mode, email, displayName, avatar }));
+    window.addEventListener('pagehide', save);
+    return () => window.removeEventListener('pagehide', save);
+  }, [mode, email, displayName, avatar]);
 
   async function handleReset() {
     setError(''); setResetMsg('');
@@ -70,6 +79,7 @@ export default function AuthPage() {
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
+      sessionStorage.removeItem(DRAFT_KEY);
     } catch (err) {
       setError(authMsg(err));
     } finally { setLoading(false); }
@@ -80,7 +90,7 @@ export default function AuthPage() {
       <div style={{ maxWidth: 420, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 22 }}>
           <div style={{ fontSize: 11, letterSpacing: '.24em', color: '#7a6a56', marginBottom: 6 }}>EST. 2026 · PROVINCETOWN</div>
-          <div style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 36, fontStyle: 'normal', color: '#1a6b8a', lineHeight: 1, letterSpacing: '0.02em', marginBottom: 7 }}>
+          <div style={{ fontFamily: "'Bebas Neue',Impact,sans-serif", fontSize: 52, fontStyle: 'normal', color: '#1a6b8a', lineHeight: 1, letterSpacing: '0.01em', marginBottom: 10 }}>
             The JBBCE<br />Executive Retreat
           </div>
           <div style={{ fontSize: 10, color: '#7a6a56', fontStyle: 'italic' }}>
