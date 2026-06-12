@@ -6,6 +6,23 @@ import { COLORS } from '../constants';
 
 const ADMIN_EMAIL = 'bnwokocha@gmail.com';
 
+// Friendly messages for the auth errors people actually hit. The old
+// regex-stripping turned "Error (auth/email-already-in-use)" into "Error ."
+const AUTH_ERRORS = {
+  'auth/email-already-in-use': 'That email already has an account — tap "Sign in" below instead (or "Forgot password?" if you need it).',
+  'auth/invalid-credential': "Wrong email or password — try again, or tap \"Forgot password?\".",
+  'auth/wrong-password': "Wrong email or password — try again, or tap \"Forgot password?\".",
+  'auth/user-not-found': 'No account with that email yet — tap "Create account" below.',
+  'auth/weak-password': 'Password needs at least 6 characters.',
+  'auth/invalid-email': "That email address doesn't look right — double-check it.",
+  'auth/too-many-requests': 'Too many attempts — give it a minute, then try again.',
+  'auth/network-request-failed': 'Network hiccup — check your signal and try again.',
+};
+const authMsg = err =>
+  AUTH_ERRORS[err.code] ||
+  err.message.replace('Firebase: ', '').replace(/\(auth.*\)\.?/, '').trim() ||
+  'Something went wrong — try again.';
+
 export default function AuthPage() {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
@@ -23,7 +40,7 @@ export default function AuthPage() {
       await sendPasswordResetEmail(auth, email);
       setResetMsg(`Reset link sent to ${email} — check your inbox (and spam).`);
     } catch (err) {
-      setError(err.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
+      setError(authMsg(err));
     }
   }
 
@@ -54,7 +71,7 @@ export default function AuthPage() {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (err) {
-      setError(err.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
+      setError(authMsg(err));
     } finally { setLoading(false); }
   }
 
