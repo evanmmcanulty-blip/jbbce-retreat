@@ -42,6 +42,8 @@ export default function AuthPage() {
           color: COLORS[idx],
           room: '',
           admin: email.toLowerCase() === ADMIN_EMAIL,
+          // New accounts need admin approval before they can see trip data (door codes etc.)
+          approved: email.toLowerCase() === ADMIN_EMAIL,
           arrivalDateRaw: '2026-06-29',
           departureDateRaw: '2026-07-11',
           travelModeArr: 'Ferry (Bay State Cruises)',

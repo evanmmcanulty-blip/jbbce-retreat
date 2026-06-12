@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
@@ -247,12 +247,54 @@ function GuestsTab({ users, isAdmin }) {
   );
 }
 
+const EXPORT_COLLECTIONS = ['users','events','ideas','meals','receipts','bulletins','groceries','infoCustom','payments','config'];
+
 function AdminTab({ users, profile }) {
+  const [exporting, setExporting] = useState(false);
   async function toggleAdmin(uid, cur) { await updateDoc(doc(db,'users',uid), { admin: !cur }); }
   async function toggleAccountant(uid, cur) { await updateDoc(doc(db,'users',uid), { accountant: !cur }); }
+  async function approve(uid) { await updateDoc(doc(db,'users',uid), { approved: true }); }
+
+  // Full-data JSON backup — Firestore free tier has no backups; this is the safety net
+  async function exportAll() {
+    setExporting(true);
+    try {
+      const dump = { exportedAt: new Date().toISOString() };
+      for (const name of EXPORT_COLLECTIONS) {
+        const snap = await getDocs(collection(db, name));
+        dump[name] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      const url = URL.createObjectURL(new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `jbbce-backup-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally { setExporting(false); }
+  }
+
+  const pending = users.filter(u => u.approved === false);
+
   return (
     <div>
       <div className="section-sub">Toggle admin for other users. Admins can edit/delete anything and manage rooms. The accountant (Chris) can edit cost line items and confirm house-fund payments.</div>
+
+      {pending.length > 0 && (
+        <div style={{marginBottom:14}}>
+          <div className="info-head" style={{marginTop:0}}>⏳ WAITING FOR APPROVAL</div>
+          {pending.map(u => (
+            <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+              <span style={{fontSize:15}}>{u.displayName} <span style={{fontSize:11,color:'var(--muted)'}}>{u.email}</span></span>
+              <button className="btn btn-primary" style={{fontSize:12,padding:'6px 12px'}} onClick={()=>approve(u.uid)}>✓ Approve</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="tip-box" style={{marginBottom:14,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+        <span style={{flex:1}}>💾 Download everything (receipts, payments, events…) as a JSON file. Do this weekly and on the last day — there are no other backups.</span>
+        <button className="btn btn-secondary" disabled={exporting} onClick={exportAll}>{exporting?'Exporting…':'Export backup'}</button>
+      </div>
       {users.filter(u => u.uid !== profile.uid).map(u => (
         <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,padding:'8px 0',borderBottom:'1px solid var(--border)',flexWrap:'wrap'}}>
           <span style={{fontSize:16}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}</span>

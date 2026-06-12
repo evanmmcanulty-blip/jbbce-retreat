@@ -24,6 +24,18 @@ function AppShell() {
   );
   if (!user) return <AuthPage />;
 
+  // Approval gate: new accounts wait for Brandon before seeing trip data
+  if (profile?.approved === false) return (
+    <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',minHeight:'100vh',gap:14,padding:24,textAlign:'center' }}>
+      <div style={{ fontSize:44 }}>🛂</div>
+      <div style={{ fontSize:18,fontWeight:'bold',color:'var(--ocean)' }}>Almost in, {profile.displayName?.split(' ')[0] || 'friend'}!</div>
+      <div style={{ fontSize:14,color:'var(--muted)',maxWidth:320 }}>
+        Your account is waiting for Brandon to wave you through. Give him a nudge in the group chat — this page updates by itself once he does.
+      </div>
+      <button className="btn-mini" onClick={() => signOut(auth)}>Sign out</button>
+    </div>
+  );
+
   // Receipts I'm tagged in, didn't upload, and haven't had a payment confirmed yet
   const myReceiptAlerts = receipts.filter(r =>
     r.whoIds?.includes(profile?.uid) &&
