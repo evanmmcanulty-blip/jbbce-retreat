@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { COLORS } from '../constants';
@@ -14,6 +14,18 @@ export default function AuthPage() {
   const [avatar, setAvatar] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState('');
+
+  async function handleReset() {
+    setError(''); setResetMsg('');
+    if (!email) { setError('Enter your email above first, then tap reset.'); return; }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetMsg(`Reset link sent to ${email} — check your inbox (and spam).`);
+    } catch (err) {
+      setError(err.message.replace('Firebase: ','').replace(/\(auth.*\)/,''));
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -64,6 +76,7 @@ export default function AuthPage() {
           <p className="sub">{mode === 'login' ? 'Sign in to your account' : 'Create your account'}</p>
 
           {error && <div className="error-msg">{error}</div>}
+          {resetMsg && <div className="tip-box" style={{ marginBottom: 10 }}>📬 {resetMsg}</div>}
 
           <form onSubmit={handleSubmit}>
             {mode === 'signup' && (
@@ -90,6 +103,14 @@ export default function AuthPage() {
             <div className="form-group">
               <label>Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+              {mode === 'login' && (
+                <div style={{ textAlign: 'right', marginTop: 4 }}>
+                  <button type="button" onClick={handleReset}
+                    style={{ background: 'none', border: 'none', color: '#1a6b8a', cursor: 'pointer', fontSize: 12, textDecoration: 'underline', padding: 0 }}>
+                    Forgot password?
+                  </button>
+                </div>
+              )}
             </div>
             <button className="btn btn-primary" type="submit" style={{ width: '100%' }} disabled={loading}>
               {loading ? 'Loading...' : mode === 'login' ? 'Sign in' : 'Create account'}

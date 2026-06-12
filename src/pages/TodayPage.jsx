@@ -65,6 +65,13 @@ export default function TodayPage() {
         </div>
       )}
 
+      {profile && !profile.room && (
+        <div className="tip-box" style={{marginBottom:12}}>
+          🛏 You're not in a room yet, so you're not in the cost split. Ask Brandon to assign you one,
+          and set your real arrival & departure in ⚙️ Settings → Arrivals — your dates drive what you owe.
+        </div>
+      )}
+
       <div className="today-hero">
         <div className="bd">{fmtFull(d)}</div>
         <div className="dl">DAY {viewIdx+1} OF {TRIP_DAYS.length} · JBBCE EXECUTIVE RETREAT</div>

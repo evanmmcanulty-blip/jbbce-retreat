@@ -11,7 +11,7 @@ import Modal from '../components/Modal';
 
 export default function ReceiptsPage() {
   const { profile } = useAuth();
-  const { docs: receipts } = useCollection('receipts');
+  const { docs: receipts, loading } = useCollection('receipts');
   const { docs: users } = useCollection('users');
   const isAdmin = profile?.admin;
   const [editReceipt, setEditReceipt] = useState(null);
@@ -23,7 +23,7 @@ export default function ReceiptsPage() {
       <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
       <SettleUp receipts={receipts} users={users} profile={profile} onLogPayment={setPayModal} />
       <UploadForm profile={profile} users={users} />
-      {receipts.length===0 && <div className="empty-note">No receipts yet.</div>}
+      {!loading && receipts.length===0 && <div className="empty-note">No receipts yet.</div>}
       {[...receipts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r => (
         <ReceiptItem key={r.id} r={r} users={users} profile={profile} isAdmin={isAdmin}
           onEdit={()=>setEditReceipt(r)} onLogPayment={()=>setPayModal(r)} />
@@ -132,6 +132,21 @@ function UploadForm({ profile, users }) {
   const [uploading, setUploading] = useState(false);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
+  // Opening the form pre-selects whoever is at the house today (by arrival/departure dates)
+  function openForm() {
+    if (!open && form.whoIds.length === 0) {
+      const now = new Date();
+      const todayISO = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+      const present = users.filter(u =>
+        u.uid !== profile.uid &&
+        u.arrivalDateRaw && u.departureDateRaw &&
+        u.arrivalDateRaw <= todayISO && u.departureDateRaw >= todayISO
+      ).map(u => u.uid);
+      if (present.length) set('whoIds', present);
+    }
+    setOpen(!open);
+  }
+
   function toggle(k, val) {
     setForm(f => ({...f, [k]: f[k].includes(val) ? f[k].filter(x=>x!==val) : [...f[k], val]}));
   }
@@ -164,7 +179,7 @@ function UploadForm({ profile, users }) {
 
   return (
     <div className="card">
-      <div className="card-head" onClick={()=>setOpen(!open)}>
+      <div className="card-head" onClick={openForm}>
         <div className="card-title">+ Upload a receipt</div><span className={`chev ${open?'open':''}`}>▼</span>
       </div>
       {open && <div className="card-body" style={{paddingTop:12}}>

@@ -88,14 +88,11 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
       await updateDoc(doc(db,'events',ev.id), { [`rsvps.${profile.uid}`]: status });
     }
   }
-  async function duplicateEvent(ev) {
-    const dayStr = window.prompt(`Copy "${ev.title}" to which day? Enter 1-${TRIP_DAYS.length} (1 = Jun 29, ${TRIP_DAYS.length} = Jul 11):`);
-    const dayNum = parseInt(dayStr, 10);
-    if (isNaN(dayNum) || dayNum < 1 || dayNum > TRIP_DAYS.length) return;
-    const copy = { ...ev, dayIdx: dayNum-1, recurring: false, rsvps: {}, rsvpsByDay: {}, owner: profile.uid, createdAt: new Date().toISOString() };
+  async function duplicateEvent(ev, dayIdx) {
+    const copy = { ...ev, dayIdx, recurring: false, rsvps: {}, rsvpsByDay: {}, owner: profile.uid, createdAt: new Date().toISOString() };
     delete copy.id;
     await addDoc(collection(db,'events'), copy);
-    alert(`Copied to ${fmtDOW(TRIP_DAYS[dayNum-1])} ${fmtMon(TRIP_DAYS[dayNum-1])} ${TRIP_DAYS[dayNum-1].getDate()}`);
+    alert(`Copied to ${fmtDOW(TRIP_DAYS[dayIdx])} ${fmtMon(TRIP_DAYS[dayIdx])} ${TRIP_DAYS[dayIdx].getDate()}`);
   }
 
   if (events.length === 0) return <div className="empty-note">No events this day in this filter.</div>;
@@ -163,7 +160,11 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
             </div>
             <div className="btn-row" style={{marginTop:9}}>
               <button className="btn-mini" onClick={()=>calExport(ev, selDay)}>📅 Calendar</button>
-              <button className="btn-mini" onClick={()=>duplicateEvent(ev)}>📋 Repeat on another day</button>
+              <select value="" style={{width:'auto',fontSize:12,padding:'5px 10px',color:'var(--muted)',borderRadius:8}}
+                onChange={e=>{if(e.target.value!=='')duplicateEvent(ev, parseInt(e.target.value));}}>
+                <option value="">📋 Repeat on day…</option>
+                {TRIP_DAYS.map((d,i)=><option key={i} value={i}>{fmtDOW(d)} {fmtMon(d)} {d.getDate()}</option>)}
+              </select>
               {canEdit && <button className="btn-mini" onClick={()=>setEditing(isEditing?null:ev.id)}>✏️ Edit</button>}
               {canEdit && <button className="btn btn-danger" onClick={async()=>{if(window.confirm('Delete this event?'))await deleteDoc(doc(db,'events',ev.id));}}>🗑</button>}
             </div>
