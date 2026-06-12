@@ -6,6 +6,7 @@ export function useCollection(path, order) {
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    if (!path) return; // pass null to skip (e.g. while signed out)
     const ref = collection(db, path);
     const q = order ? query(ref, orderBy(order)) : ref;
     const unsub = onSnapshot(q, snap => {

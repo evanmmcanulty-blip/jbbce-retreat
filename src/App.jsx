@@ -16,8 +16,10 @@ import './styles.css';
 function AppShell() {
   const { user, profile } = useAuth();
   const [tab, setTab] = useState('today');
-  const { docs: receipts } = useCollection('receipts');
-  const { docs: bulletins } = useCollection('bulletins');
+  // Subscribe only once signed in and approved — otherwise rules deny and log noise
+  const ready = user && profile?.approved !== false;
+  const { docs: receipts } = useCollection(ready ? 'receipts' : null);
+  const { docs: bulletins } = useCollection(ready ? 'bulletins' : null);
 
   if (user === undefined) return (
     <div style={{ display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:'Georgia,serif',color:'#1a6b8a',fontSize:18 }}>
