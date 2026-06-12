@@ -7,10 +7,10 @@
   --text:#2c2416;--muted:#7a6a56;
   --white:#fff;--border:rgba(44,36,22,.12);--r:10px;
 }
-body{font-family:Georgia,serif;background:#f5f0e8;color:var(--text)}
+body{font-family:Georgia,serif;background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5}
 /* Masthead — faux-resort letterhead: big italic display vs tiny tracked caps */
 .hero{background:linear-gradient(165deg,#12506b,#1a6b8a 55%,#23789c);color:#fff;padding:22px 20px 15px;text-align:center}
-.hero h1{font-size:27px;font-style:italic;font-weight:normal;margin-bottom:6px;letter-spacing:.01em}
+.hero h1{font-size:27px;font-style:italic;font-weight:normal;margin-bottom:6px;letter-spacing:.01em;line-height:1.15}
 .hero .sub{font-size:10px;opacity:.85;letter-spacing:.22em;display:flex;align-items:center;justify-content:center;gap:10px}
 .hero .sub::before,.hero .sub::after{content:'';height:1px;width:30px;background:rgba(255,255,255,.4);flex-shrink:0}
 .hero .ac{font-size:10px;opacity:.55;margin-top:5px;font-style:italic;letter-spacing:.04em}
@@ -41,7 +41,7 @@ body{font-family:Georgia,serif;background:#f5f0e8;color:var(--text)}
 .badge-s{background:var(--sl);color:var(--sage)}
 .badge-g{background:var(--gl);color:#8a6a1a}
 .badge-p{background:var(--pl);color:var(--plum)}
-.notif-dot{background:var(--coral);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:3px;display:inline-block}
+.notif-dot{background:var(--coral);color:#fff;font-size:10px;padding:1px 5px;border-radius:8px;margin-left:3px;display:inline-block;font-family:Verdana,sans-serif;line-height:1.4}
 .btn{border:none;padding:9px 17px;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;transition:all .15s}
 .btn-primary{background:var(--ocean);color:#fff}
 .btn-primary:hover{background:#155870}
@@ -61,7 +61,7 @@ textarea{resize:vertical;min-height:60px}
 .tip-box{background:var(--gl);border:1px solid var(--gold);border-radius:8px;padding:9px 12px;font-size:12px;color:#6a5215;line-height:1.5}
 .info-head{font-size:11px;font-weight:bold;color:var(--muted);letter-spacing:.16em;margin-bottom:8px;margin-top:18px}
 .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
-.section-title{font-size:24px;font-style:italic;font-weight:normal;margin-bottom:5px;color:var(--ocean)}
+.section-title{font-size:24px;font-style:italic;font-weight:normal;margin-bottom:5px;color:var(--ocean);line-height:1.2}
 .section-sub{font-size:14px;color:var(--muted);margin-bottom:14px}
 .empty-note{color:var(--muted);font-size:13px;font-style:italic;padding:16px 0;text-align:center}
 /* Avatar */
@@ -84,10 +84,10 @@ textarea{resize:vertical;min-height:60px}
 .day-chip:hover{border-color:var(--om)}
 .day-chip.active{background:var(--ocean);color:#fff;border-color:var(--ocean);transform:scale(1.08);box-shadow:0 3px 10px rgba(26,107,138,.35)}
 .day-chip.today{border-color:var(--gold);border-width:2px}
-.day-chip .dow{font-size:9px;opacity:.8}
-.day-chip .dn{font-size:16px;font-weight:bold}
-.day-chip .dmo{font-size:9px;opacity:.7}
-.day-chip .ec{font-size:9px;margin-top:1px}
+.day-chip .dow{font-size:10px;opacity:.8;letter-spacing:.06em}
+.day-chip .dn{font-size:17px;font-weight:bold;line-height:1.2}
+.day-chip .dmo{font-size:10px;opacity:.7}
+.day-chip .ec{font-size:10px;margin-top:1px}
 /* Today */
 .today-hero{background:var(--ocean);color:#fff;border-radius:var(--r);padding:15px 17px;margin-bottom:11px}
 .today-hero .bd{font-size:19px;font-style:italic}
@@ -106,7 +106,7 @@ textarea{resize:vertical;min-height:60px}
 .strict-flag{font-size:10px;background:var(--coral);color:#fff;padding:1px 6px;border-radius:8px;margin-left:5px}
 /* Meal vote grid */
 .mv-grid{display:grid;gap:3px;min-width:940px;font-size:11px}
-.mv-head{background:var(--ocean);color:#fff;padding:5px 2px;border-radius:5px;text-align:center;font-size:9px}
+.mv-head{background:var(--ocean);color:#fff;padding:5px 2px;border-radius:5px;text-align:center;font-size:10px;letter-spacing:.04em}
 .mv-label{display:flex;align-items:center;font-size:12px;color:var(--muted);font-weight:bold}
 .mv-cell{border:1px solid var(--border);border-radius:6px;padding:4px 2px;text-align:center;cursor:pointer;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:9px;transition:border .15s}
 .mv-cell:hover{border-color:var(--om)}
@@ -160,7 +160,7 @@ textarea{resize:vertical;min-height:60px}
 .weather-day:hover{border-color:var(--om)}
 /* Live Provincetown sky — Today hero tracks the actual time of day */
 .today-hero{text-shadow:0 1px 2px rgba(0,0,0,.2);transition:background 1s;padding:19px 18px}
-.today-hero .bd{font-size:25px}
+.today-hero .bd{font-size:25px;line-height:1.15}
 .today-hero .dl{letter-spacing:.2em;font-size:10px;margin-top:5px}
 .today-hero.sky-dawn{background:linear-gradient(150deg,#2c3e6b,#8a5aaa 45%,#d4715a 80%,#c8a84b)}
 .today-hero.sky-day{background:linear-gradient(150deg,#1a6b8a,#4a9db5 65%,#8ecede)}
