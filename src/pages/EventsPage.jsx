@@ -365,7 +365,7 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
         const isEditing = editingIdea === idea.id;
         return (
           <div key={idea.id} className="card">
-            <div className="card-head" onClick={()=>setExpanded(isOpen?null:idea.id)}>
+            <div className="card-head" onClick={()=>{setExpanded(isOpen?null:idea.id);setComment('');}}>
               <div>
                 <div className="card-title">{idea.title}</div>
                 <div className="card-sub">

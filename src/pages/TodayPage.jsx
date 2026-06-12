@@ -3,7 +3,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
-import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent } from '../constants';
+import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isoDate, isNightEvent } from '../constants';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 
@@ -59,6 +59,24 @@ export default function TodayPage() {
 
   const voteMealDoc = voteModal ? getMealDoc(voteModal.mt) : null;
 
+  // Who lands or leaves on the viewed day — travel data already lives on each user
+  const dayISO = isoDate(viewIdx);
+  const arrivals = users.filter(u => u.arrivalDateRaw === dayISO);
+  const departures = users.filter(u => u.departureDateRaw === dayISO);
+  const travelLine = (u, kind) => {
+    const time = kind==='arr' ? u.arrivalTime : u.departureTime;
+    const mode = kind==='arr' ? u.travelModeArr : u.travelModeDep;
+    const flight = kind==='arr' ? u.arrivalFlight : u.departureFlight;
+    const ferry = kind==='arr' ? u.arrivalFerry : u.departureFerry;
+    return [time && fmt12(time), mode, flight && `✈ ${flight}`, ferry && `⛴ ${ferry}`].filter(Boolean).join(' · ');
+  };
+
+  // Next event up today (only when viewing the real today)
+  const nowHM = `${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
+  const nextUpId = realIdx === viewIdx
+    ? eventsToday.find(ev => ev.time && ev.time >= nowHM)?.id
+    : null;
+
   // Hero sky follows the real P-town clock (June: sunrise ~5:07a, sunset ~8:20p)
   const nowMin = today.getHours() * 60 + today.getMinutes();
   const [sky, skyIcon] =
@@ -95,6 +113,24 @@ export default function TodayPage() {
       {strictOnes.length>0 && (
         <div className="tip-box" style={{background:'var(--cl)',borderColor:'var(--coral)',color:'#8a3520',marginBottom:12}}>
           ⏱ <b>Don't be late:</b> {strictOnes.map(e=>`${e.title} at ${fmt12(e.time)}`).join(', ')}
+        </div>
+      )}
+
+      {(arrivals.length>0 || departures.length>0) && (
+        <div className="tip-box" style={{background:'var(--ol)',borderColor:'var(--om)',color:'var(--ocean)',marginBottom:12}}>
+          {arrivals.map(u => (
+            <div key={u.uid} style={{padding:'2px 0'}}>
+              🛬 <b>{u.displayName?.split(' ')[0]} arrives</b>{travelLine(u,'arr') && <> — {travelLine(u,'arr')}</>}
+              {u.arrivalFlight && (
+                <> · <a href={`https://www.google.com/search?q=flight+${encodeURIComponent(u.arrivalFlight)}+status`} target="_blank" rel="noopener noreferrer" style={{color:'var(--ocean)'}}>status ↗</a></>
+              )}
+            </div>
+          ))}
+          {departures.map(u => (
+            <div key={u.uid} style={{padding:'2px 0'}}>
+              🛫 <b>{u.displayName?.split(' ')[0]} heads home</b>{travelLine(u,'dep') && <> — {travelLine(u,'dep')}</>}
+            </div>
+          ))}
         </div>
       )}
 
@@ -136,6 +172,7 @@ export default function TodayPage() {
             <div className="t-body">
               <div style={{fontWeight:'bold',fontSize:14}}>
                 {ev.title}
+                {ev.id===nextUpId && <span className="badge badge-g" style={{marginLeft:6}}>next up</span>}
                 {ev.strict && <span className="strict-flag">⏱</span>}
                 {isNightEvent(ev) && <span className="badge badge-p" style={{marginLeft:6}}>night</span>}
                 {ev.recurring && <span className="badge badge-o" style={{marginLeft:6}}>daily</span>}

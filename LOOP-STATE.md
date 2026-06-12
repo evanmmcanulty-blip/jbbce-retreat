@@ -18,5 +18,7 @@ Build check: `CI=true npx react-scripts build` (must pass before commit). App is
   - OWNER ACTIONS (add to final summary): get Firebase console Owner access from the friend (top risk); check Spark vs Blaze, enable Blaze + ~$10 budget alert (quota blackout = 50K reads/day); verify Brandon's account is bnwokocha@gmail.com admin; weekly + day-13 JSON export habit; eyeball signup emails for typos; glance at Firebase usage tab daily during trip.
 - [x] /delight — DONE (commit 9138736): live time-of-day sky hero (Lens B), all-square 🍹 celebration, initials avatars replacing identical 👤, today-chip glow, reduced-motion respected.
 
-## Cycle 1 complete. Cycle 2: re-run lenses on the evolved app.
-Carry-overs worth checking in cycle 2: meal "winner" declared from a single vote (show vote count or "leading 2-1"?); House Payments tab still window.prompt; "Forecast" label on WEATHER_AVG is really historical averages (mislabel); remaining 👤 sites (vote modals, ideas, receipts rows). Stop when a full cycle yields nothing meaningful → end loop, summarize incl. OWNER ACTIONS from /audit + /iceberg above.
+## Cycle 1 complete.
+## Cycle 2 complete (commit 718f166): unseen-announcement badge on Info tab, "leading · N of M votes" meal tallies, inline payments editor (no more window.prompt anywhere money-related), Forecast→Typical late June, Avatar sweep at vote modals/ideas/bulletins/payments.
+  - Audit re-check of all write paths vs new rules: consistent. Iceberg re-run: nothing new at waterline.
+## Cycle 3: convergence check. If nothing meaningful → end loop (no ScheduleWakeup), final summary MUST include the OWNER ACTIONS from /audit + /iceberg above.
