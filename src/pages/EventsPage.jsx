@@ -7,6 +7,7 @@ import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, fmt12, fmtFull, fmtDOW, fmtMon, da
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import PlaceInput from '../components/PlaceInput';
+import { CalendarIcon, UtensilsIcon, LightbulbIcon, SunIcon, MoonIcon } from '../components/Icons';
 
 export default function EventsPage() {
   const { profile } = useAuth();
@@ -29,10 +30,10 @@ export default function EventsPage() {
   return (
     <div className="page">
       <div className="stabs">
-        <button className={`stab ${sub==='calendar'?'active':''}`} onClick={()=>setSub('calendar')}>📅 Calendar</button>
-        <button className={`stab ${sub==='meals'?'active':''}`} onClick={()=>setSub('meals')}>🍴 Meals</button>
+        <button className={`stab ${sub==='calendar'?'active':''}`} onClick={()=>setSub('calendar')}><CalendarIcon size={13}/>Calendar</button>
+        <button className={`stab ${sub==='meals'?'active':''}`} onClick={()=>setSub('meals')}><UtensilsIcon size={13}/>Meals</button>
         <button className={`stab ${sub==='ideas'?'active':''}`} onClick={()=>setSub('ideas')}>
-          💡 Propose/Vote{ideas.length>0 && <span className="notif-dot">{ideas.length}</span>}
+          <LightbulbIcon size={13}/>Propose/Vote{ideas.length>0 && <span className="notif-dot">{ideas.length}</span>}
         </button>
       </div>
 
@@ -40,9 +41,9 @@ export default function EventsPage() {
         <div className="events-layout">
           <div className="events-main">
             <div className="btn-row" style={{marginBottom:10}}>
-              {[['all','All'],['day','☀ Day'],['night','🌙 Night (after 4pm)']].map(([f,l]) => (
-                <button key={f} className="btn-mini" style={filter===f?{borderColor:'var(--ocean)',color:'var(--ocean)',fontWeight:'bold'}:{}}
-                  onClick={()=>setFilter(f)}>{l}</button>
+              {[['all',null,'All'],['day',SunIcon,'Day'],['night',MoonIcon,'Night (after 4pm)']].map(([f,Icon,l]) => (
+                <button key={f} className="btn-mini" style={{display:'inline-flex',alignItems:'center',gap:4,...(filter===f?{borderColor:'var(--ocean)',color:'var(--ocean)',fontWeight:'bold'}:{})}}
+                  onClick={()=>setFilter(f)}>{Icon && <Icon size={12}/>}{l}</button>
               ))}
             </div>
             <div className="day-strip">
@@ -59,8 +60,8 @@ export default function EventsPage() {
             <AddEventForm profile={profile} />
           </div>
           <div className="ideas-sidebar">
-            <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:13,marginBottom:8}}>
-              💡 Proposed ideas{ideas.length>0 && <span className="notif-dot">{ideas.length}</span>}
+            <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:13,marginBottom:8,display:'flex',alignItems:'center',gap:5}}>
+              <LightbulbIcon size={14}/>Proposed ideas{ideas.length>0 && <span className="notif-dot">{ideas.length}</span>}
             </div>
             <IdeasSidebar ideas={ideas} users={users} profile={profile} isAdmin={isAdmin} />
           </div>

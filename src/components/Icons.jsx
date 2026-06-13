@@ -197,3 +197,17 @@ export const ClipboardIcon = (p) => (
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
   </Ico>
 );
+
+export const LightbulbIcon = (p) => (
+  <Ico {...p}>
+    <path d="M9 18h6"/>
+    <path d="M10 22h4"/>
+    <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+  </Ico>
+);
+
+export const MoonIcon = (p) => (
+  <Ico {...p}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </Ico>
+);
