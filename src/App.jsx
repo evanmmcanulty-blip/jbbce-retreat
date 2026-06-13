@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { flushSync } from 'react-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -17,6 +18,18 @@ import './styles.css';
 function AppShell() {
   const { user, profile } = useAuth();
   const [tab, setTab] = useState('today');
+  // Fluid tab navigation: snapshot → swap → animate. flushSync makes React's
+  // DOM update land synchronously so the View Transition captures the new
+  // screen, not the old one. Degrades to an instant swap without the API or
+  // when the user prefers reduced motion.
+  const navigate = (t) => {
+    if (t === tab) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduce) { setTab(t); return; }
+    // Tapping a new tab mid-transition aborts the running one, rejecting its
+    // promise — expected (newest tap wins), so swallow it to keep the console clean.
+    document.startViewTransition(() => flushSync(() => setTab(t))).finished.catch(() => {});
+  };
   // Subscribe only once signed in and approved — otherwise rules deny and log noise
   const ready = user && profile?.approved !== false;
   const { docs: receipts } = useCollection(ready ? 'receipts' : null);
@@ -72,7 +85,7 @@ function AppShell() {
           <Avatar user={profile} size={26} />
           <span className="header-name">{profile?.displayName?.split(' ')[0] || profile?.email}</span>
           <div className="header-actions">
-            <button className="icon-btn" title="Settings" onClick={() => setTab('settings')}>
+            <button className="icon-btn" title="Settings" onClick={() => navigate('settings')}>
               <SlidersIcon size={18} />
             </button>
             <button className="btn-mini" onClick={() => signOut(auth)}>Sign out</button>
@@ -80,7 +93,7 @@ function AppShell() {
         </div>
         <div className="nav">
           {TABS.map(t => (
-            <button key={t.id} className={`nav-btn ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>
+            <button key={t.id} className={`nav-btn ${tab===t.id?'active':''}`} onClick={()=>navigate(t.id)}>
               <div className="nav-icon-wrap">
                 <t.Icon size={18} />
                 {t.badge > 0 && <span className="notif-dot">{t.badge}</span>}
@@ -97,12 +110,14 @@ function AppShell() {
         <div className="ac">Joint Brotherhood of Beachside Cock Enthusiasts</div>
       </div>
 
-      {tab==='today' && <TodayPage />}
-      {tab==='events' && <EventsPage />}
-      {tab==='house' && <HousePage />}
-      {tab==='receipts' && <ReceiptsPage />}
-      {tab==='info' && <InfoPage />}
-      {tab==='settings' && <SettingsPage />}
+      <main className="tab-main" key={tab}>
+        {tab==='today' && <TodayPage />}
+        {tab==='events' && <EventsPage />}
+        {tab==='house' && <HousePage />}
+        {tab==='receipts' && <ReceiptsPage />}
+        {tab==='info' && <InfoPage />}
+        {tab==='settings' && <SettingsPage />}
+      </main>
     </div>
   );
 }
