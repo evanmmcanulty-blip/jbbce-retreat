@@ -6,6 +6,7 @@ import { useCollection } from '../hooks/useCollection';
 import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isoDate, isNightEvent } from '../constants';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
+import { UtensilsIcon, CalendarIcon, SunIcon } from '../components/Icons';
 
 export default function TodayPage() {
   const { profile } = useAuth();
@@ -142,7 +143,7 @@ export default function TodayPage() {
         </div>
       )}
 
-      <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:8}}>🍴 Meals today</div>
+      <div className="section-label"><UtensilsIcon size={14}/><span>Meals today</span></div>
       <div className="meal-cards">
         {MEAL_TYPES.map(mt => {
           const md = getMealDoc(mt);
@@ -168,7 +169,7 @@ export default function TodayPage() {
         })}
       </div>
 
-      <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:7}}>📅 Schedule</div>
+      <div className="section-label"><CalendarIcon size={14}/><span>Schedule</span></div>
       {eventsToday.length===0 ? (
         <div className="empty-note">Free day — check Events for ideas!</div>
       ) : eventsToday.map(ev => {
@@ -207,7 +208,7 @@ export default function TodayPage() {
         ))}
       </div>
 
-      <div style={{marginTop:14,fontSize:12,fontWeight:'bold',color:'var(--muted)',marginBottom:6}}>🌤 Week at a glance</div>
+      <div className="section-label" style={{marginTop:14,color:'var(--muted)'}}><SunIcon size={13}/><span>Week at a glance</span></div>
       <div className="weather-strip">
         {TRIP_DAYS.map((day,i)=>{
           const ww = WEATHER_AVG[i]||WEATHER_AVG[0];

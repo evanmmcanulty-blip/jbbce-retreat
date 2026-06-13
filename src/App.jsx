@@ -11,6 +11,7 @@ import ReceiptsPage from './pages/ReceiptsPage';
 import InfoPage from './pages/InfoPage';
 import SettingsPage from './pages/SettingsPage';
 import Avatar from './components/Avatar';
+import { SunIcon, CalendarIcon, HomeIcon, ReceiptIcon, MapIcon, SlidersIcon } from './components/Icons';
 import './styles.css';
 
 function AppShell() {
@@ -57,39 +58,43 @@ function AppShell() {
   ).length;
 
   const TABS = [
-    { id:'today', label:'☀ Today' },
-    { id:'events', label:'📅 Events' },
-    { id:'house', label:'🏠 House' },
-    { id:'receipts', label:'🧾 Receipts', badge: myReceiptAlerts },
-    { id:'info', label:'🗺 Info', badge: unseenBulletins },
+    { id:'today', label:'Today', Icon: SunIcon },
+    { id:'events', label:'Events', Icon: CalendarIcon },
+    { id:'house', label:'House', Icon: HomeIcon },
+    { id:'receipts', label:'Receipts', badge: myReceiptAlerts, Icon: ReceiptIcon },
+    { id:'info', label:'Info', badge: unseenBulletins, Icon: MapIcon },
   ];
 
   return (
     <div>
+      <header className="app-header">
+        <div className="app-header-top">
+          <Avatar user={profile} size={26} />
+          <span className="header-name">{profile?.displayName?.split(' ')[0] || profile?.email}</span>
+          <div className="header-actions">
+            <button className="icon-btn" title="Settings" onClick={() => setTab('settings')}>
+              <SlidersIcon size={18} />
+            </button>
+            <button className="btn-mini" onClick={() => signOut(auth)}>Sign out</button>
+          </div>
+        </div>
+        <div className="nav">
+          {TABS.map(t => (
+            <button key={t.id} className={`nav-btn ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>
+              <div className="nav-icon-wrap">
+                <t.Icon size={18} />
+                {t.badge > 0 && <span className="notif-dot">{t.badge}</span>}
+              </div>
+              <span className="nav-label">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </header>
+
       <div className="hero">
         <h1>2026 JBBCE Executive Retreat</h1>
         <div className="sub">5–7 POINT ST #3, PROVINCETOWN, MA · JUNE 29 – JULY 11</div>
         <div className="ac">Joint Brotherhood of Beachside Cock Enthusiasts</div>
-      </div>
-
-      {/* User bar — name + avatar + gear on top */}
-      <div className="user-bar">
-        <Avatar user={profile} size={24} />
-        <span style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14}}>{profile?.displayName || profile?.email}</span>
-        <button className="btn-mini" style={{marginLeft:'auto',fontSize:16,padding:'4px 10px'}}
-          title="My settings" onClick={() => setTab('settings')}>⚙️</button>
-        <button className="btn-mini" onClick={() => signOut(auth)}>Sign out</button>
-      </div>
-
-      {/* Main nav below user bar */}
-      <div className="nav-wrap">
-        <div className="nav">
-          {TABS.map(t => (
-            <button key={t.id} className={`nav-btn ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>
-              {t.label}{t.badge > 0 && <span className="notif-dot">{t.badge}</span>}
-            </button>
-          ))}
-        </div>
       </div>
 
       {tab==='today' && <TodayPage />}
