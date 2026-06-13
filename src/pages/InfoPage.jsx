@@ -3,27 +3,29 @@ import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestor
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
-import { safeUrl } from '../constants';
+import { safeUrl, TRIP_DAYS, fmtDOW, fmtMon } from '../constants';
 import Avatar from '../components/Avatar';
+import Modal from '../components/Modal';
+import { BellIcon, ShoppingCartIcon, LinkIcon, TicketIcon, AnchorIcon, BikeIcon, UtensilsIcon } from '../components/Icons';
 
 const BUILTINS = [
-  { h:'⛴ FERRY & TRANSPORT', items:[
+  { h:'FERRY & TRANSPORT', Icon: AnchorIcon, items:[
     { t:'Bay State Cruise Co. — Boston', d:'Fast ferry 90 min from World Trade Center. Book ahead!', u:'https://www.baystatecruisecompany.com' },
     { t:'City Cruises — Boston', d:'Alternative fast ferry from Boston.', u:'https://www.cityexperiences.com/provincetown' },
     { t:'Provincetown Fast Ferry — Plymouth', d:'90-min ferry, easier parking.', u:'https://www.p-townferry.com' },
   ]},
-  { h:'🚲 BIKE RENTALS — PRICE-MATCH HACK', tip:'All three shops compete. Tell any of them you got a cheaper quote elsewhere — they will match it.',
+  { h:'BIKE RENTALS — PRICE-MATCH HACK', Icon: BikeIcon, tip:'All three shops compete. Tell any of them you got a cheaper quote elsewhere — they will match it.',
     items:[
       { t:'Provincetown Bike Rentals', d:'Will match others.', u:'https://www.google.com/search?q=Provincetown+Bike+Rentals' },
       { t:'Ptown Bikes', d:'Bradford St. Cruisers, e-bikes.', u:'https://www.ptownbikes.com' },
       { t:'The Bike Shack', d:'Third competitor for the price match.', u:'https://www.google.com/search?q=The+Bike+Shack+Provincetown' },
     ]},
-  { h:'🎭 SHOWS & TICKETS', items:[
+  { h:'SHOWS & TICKETS', Icon: TicketIcon, nominatable: true, items:[
     { t:'Miss Richfield 1981 — MUST SEE', d:'Book early — sells out.', u:'https://www.missrichfield.com' },
     { t:'Crown & Anchor', d:'Drag, cabaret, piano bar.', u:'https://onlyatthecrown.com' },
     { t:'Post Office Cabaret', d:'Nightly performers.', u:'https://www.google.com/search?q=Post+Office+Cabaret+Provincetown+tickets' },
   ]},
-  { h:'🍴 FOOD & DRINKS', items:[
+  { h:'FOOD & DRINKS', Icon: UtensilsIcon, items:[
     { t:"Scott's Cakes", d:'353 Commercial St. Non-negotiable.', u:"https://www.google.com/maps/search/Scott's+Cakes+353+Commercial+St+Provincetown" },
     { t:'Happy Hour at The Red Inn', d:'15 Commercial St. Golden-hour waterfront.', u:'https://www.theredinn.com' },
     { t:'Tea Dance at the Boatslip', d:'161 Commercial St, 4–7pm daily. Week pass day one!', u:'https://www.boatslipresort.com' },
@@ -39,9 +41,9 @@ export default function InfoPage() {
   return (
     <div className="page">
       <div className="stabs">
-        <button className={`stab ${sub==='board'?'active':''}`} onClick={()=>setSub('board')}>📌 Bulletin Board</button>
-        <button className={`stab ${sub==='grocery'?'active':''}`} onClick={()=>setSub('grocery')}>🛒 Groceries</button>
-        <button className={`stab ${sub==='links'?'active':''}`} onClick={()=>setSub('links')}>🔗 Links & Tips</button>
+        <button className={`stab ${sub==='board'?'active':''}`} onClick={()=>setSub('board')}><BellIcon size={13}/>Bulletin Board</button>
+        <button className={`stab ${sub==='grocery'?'active':''}`} onClick={()=>setSub('grocery')}><ShoppingCartIcon size={13}/>Groceries</button>
+        <button className={`stab ${sub==='links'?'active':''}`} onClick={()=>setSub('links')}><LinkIcon size={13}/>Links & Tips</button>
       </div>
       {sub==='board' && <BulletinBoard profile={profile} isAdmin={isAdmin} />}
       {sub==='grocery' && <GroceryList profile={profile} isAdmin={isAdmin} />}
@@ -209,6 +211,8 @@ function GroceryList({ profile, isAdmin }) {
 function LinksTab({ profile, isAdmin }) {
   const { docs: custom } = useCollection('infoCustom');
   const [form, setForm] = useState({ t:'',d:'',u:'' });
+  const [nominateModal, setNominateModal] = useState(null);
+  const [nomForm, setNomForm] = useState({ dayIdx:'', time:'' });
 
   async function add(e) {
     e.preventDefault();
@@ -217,19 +221,46 @@ function LinksTab({ profile, isAdmin }) {
     setForm({t:'',d:'',u:''});
   }
 
+  async function submitNominate() {
+    if (!nominateModal) return;
+    await addDoc(collection(db,'ideas'), {
+      title: nominateModal.t,
+      desc: nominateModal.d,
+      url: nominateModal.u,
+      loc: '',
+      suggestedDayIdx: nomForm.dayIdx !== '' ? parseInt(nomForm.dayIdx) : null,
+      suggestedTime: nomForm.time || '',
+      cost: '',
+      by: profile.uid,
+      byName: profile.displayName,
+      votes: {},
+      comments: [],
+      createdAt: new Date().toISOString(),
+    });
+    setNominateModal(null);
+    setNomForm({ dayIdx:'', time:'' });
+  }
+
   return (
     <div>
       {BUILTINS.map(sec => (
         <div key={sec.h}>
-          <div className="info-head">{sec.h}</div>
+          <div className="info-head"><sec.Icon size={12}/>{sec.h}</div>
           {sec.tip && <div className="tip-box" style={{marginBottom:9}}>💡 {sec.tip}</div>}
           {sec.items.map(it => (
             <div key={it.t} className="link-card">
-              <div className="link-icon">🔗</div>
-              <div>
+              <div className="link-icon"><sec.Icon size={15}/></div>
+              <div style={{flex:1}}>
                 <div style={{fontWeight:'bold',fontSize:14}}>{it.t}</div>
                 <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>{it.d}</div>
-                <a className="link-url" href={it.u} target="_blank" rel="noopener noreferrer">Open ↗</a>
+                <div style={{display:'flex',gap:12,alignItems:'center',marginTop:4,flexWrap:'wrap'}}>
+                  <a className="link-url" href={it.u} target="_blank" rel="noopener noreferrer">Open ↗</a>
+                  {sec.nominatable && (
+                    <button className="rest-pick" onClick={()=>{setNominateModal(it);setNomForm({dayIdx:'',time:''});}}>
+                      Propose to group →
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -257,6 +288,27 @@ function LinksTab({ profile, isAdmin }) {
         <div className="form-group"><label>Link</label><input value={form.u} onChange={e=>setForm(f=>({...f,u:e.target.value}))} placeholder="https://..." /></div>
         <button className="btn btn-primary" type="submit">Add it</button>
       </form>
+
+      {nominateModal && (
+        <Modal title={`Propose: ${nominateModal.t}`} onClose={()=>setNominateModal(null)}>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:12}}>{nominateModal.d}</div>
+          <div className="form-group">
+            <label>Suggested day</label>
+            <select value={nomForm.dayIdx} onChange={e=>setNomForm(f=>({...f,dayIdx:e.target.value}))}>
+              <option value="">TBD — let the group decide</option>
+              {TRIP_DAYS.map((d,i)=><option key={i} value={i}>{fmtDOW(d)} {fmtMon(d)} {d.getDate()}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Suggested time (optional)</label>
+            <input type="time" value={nomForm.time} onChange={e=>setNomForm(f=>({...f,time:e.target.value}))} />
+          </div>
+          <div className="btn-row" style={{marginTop:14}}>
+            <button className="btn btn-primary" onClick={submitNominate}>Send to Events for a vote 🗳</button>
+            <button className="btn-mini" onClick={()=>setNominateModal(null)}>Cancel</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

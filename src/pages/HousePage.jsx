@@ -7,6 +7,7 @@ import { useDoc } from '../hooks/useDoc';
 import { TRIP_DAYS, ROOMS, TOTAL_NIGHTS, money } from '../constants';
 import { calcOwed, computeCostTotal } from '../utils/costEngine';
 import Avatar from '../components/Avatar';
+import { HomeIcon, ScaleIcon, CreditCardIcon, MapPinIcon, KeyIcon, ClipboardIcon } from '../components/Icons';
 
 export default function HousePage() {
   const { profile } = useAuth();
@@ -17,9 +18,9 @@ export default function HousePage() {
   return (
     <div className="page">
       <div className="stabs">
-        <button className={`stab ${sub==='info'?'active':''}`} onClick={()=>setSub('info')}>🏠 House Info</button>
-        <button className={`stab ${sub==='cost'?'active':''}`} onClick={()=>setSub('cost')}>💰 Cost Split</button>
-        <button className={`stab ${sub==='pay'?'active':''}`} onClick={()=>setSub('pay')}>💳 Payments</button>
+        <button className={`stab ${sub==='info'?'active':''}`} onClick={()=>setSub('info')}><HomeIcon size={13}/>House Info</button>
+        <button className={`stab ${sub==='cost'?'active':''}`} onClick={()=>setSub('cost')}><ScaleIcon size={13}/>Cost Split</button>
+        <button className={`stab ${sub==='pay'?'active':''}`} onClick={()=>setSub('pay')}><CreditCardIcon size={13}/>Payments</button>
       </div>
       {sub==='info' && <HouseInfo isAdmin={isAdmin} />}
       {sub==='cost' && <CostSplit isAccountant={isAccountant} />}
@@ -46,7 +47,7 @@ function HouseInfo({ isAdmin }) {
 
   return (
     <div>
-      <div className="info-head" style={{marginTop:0}}>📍 ADDRESS</div>
+      <div className="info-head" style={{marginTop:0}}><MapPinIcon size={12}/>ADDRESS</div>
       <div className="link-card">
         <div className="link-icon">🏠</div>
         <div>
@@ -56,7 +57,7 @@ function HouseInfo({ isAdmin }) {
         </div>
       </div>
       <div className="divider" />
-      <div className="info-head">🔑 ACCESS CODES</div>
+      <div className="info-head"><KeyIcon size={12}/>ACCESS CODES</div>
       {currentCodes.map((c,i) => (
         <div key={i} style={{marginBottom:10}}>
           <div style={{fontSize:11,color:'var(--muted)',letterSpacing:'.05em'}}>{c.label.toUpperCase()}</div>
@@ -64,7 +65,7 @@ function HouseInfo({ isAdmin }) {
         </div>
       ))}
       <div className="divider" />
-      <div className="info-head">📋 HOUSE RULES</div>
+      <div className="info-head"><ClipboardIcon size={12}/>HOUSE RULES</div>
       <ul style={{paddingLeft:18,fontSize:13,lineHeight:1.9}}>
         {currentRules.map((r,i)=><li key={i}>{r}</li>)}
       </ul>

@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
 import Avatar from '../components/Avatar';
+import { UserIcon, LogInIcon, LogOutIcon, UsersIcon, SlidersIcon } from '../components/Icons';
 
 export default function SettingsPage() {
   const { profile } = useAuth();
@@ -15,11 +16,11 @@ export default function SettingsPage() {
   return (
     <div className="page">
       <div className="stabs">
-        <button className={`stab ${sub==='me'?'active':''}`} onClick={()=>setSub('me')}>👤 My Profile</button>
-        <button className={`stab ${sub==='arrivals'?'active':''}`} onClick={()=>setSub('arrivals')}>✈ Arrivals</button>
-        <button className={`stab ${sub==='departures'?'active':''}`} onClick={()=>setSub('departures')}>🚪 Departures</button>
-        <button className={`stab ${sub==='guests'?'active':''}`} onClick={()=>setSub('guests')}>👥 Guests & Rooms</button>
-        {isAdmin && <button className={`stab ${sub==='admin'?'active':''}`} onClick={()=>setSub('admin')}>⚙ Admin</button>}
+        <button className={`stab ${sub==='me'?'active':''}`} onClick={()=>setSub('me')}><UserIcon size={13}/>My Profile</button>
+        <button className={`stab ${sub==='arrivals'?'active':''}`} onClick={()=>setSub('arrivals')}><LogInIcon size={13}/>Arrivals</button>
+        <button className={`stab ${sub==='departures'?'active':''}`} onClick={()=>setSub('departures')}><LogOutIcon size={13}/>Departures</button>
+        <button className={`stab ${sub==='guests'?'active':''}`} onClick={()=>setSub('guests')}><UsersIcon size={13}/>Guests & Rooms</button>
+        {isAdmin && <button className={`stab ${sub==='admin'?'active':''}`} onClick={()=>setSub('admin')}><SlidersIcon size={13}/>Admin</button>}
       </div>
       {sub==='me' && <MyProfile profile={profile} />}
       {sub==='arrivals' && <TravelTab kind="arr" users={users} profile={profile} isAdmin={isAdmin} />}
