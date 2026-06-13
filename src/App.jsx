@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
@@ -22,10 +22,15 @@ function AppShell() {
   // DOM update land synchronously so the View Transition captures the new
   // screen, not the old one. Degrades to an instant swap without the API or
   // when the user prefers reduced motion.
+  // Tracks whether the current screen arrived via a View Transition. The VT glide
+  // owns tab-to-tab nav; the per-section cascade owns cold load (no VT to conflict
+  // with). This ref decides which entrance the incoming .tab-main gets.
+  const viaVT = useRef(false);
   const navigate = (t) => {
     if (t === tab) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!document.startViewTransition || reduce) { setTab(t); return; }
+    if (!document.startViewTransition || reduce) { viaVT.current = false; setTab(t); return; }
+    viaVT.current = true;
     // Tapping a new tab mid-transition aborts the running one, rejecting its
     // promise — expected (newest tap wins), so swallow it to keep the console clean.
     document.startViewTransition(() => flushSync(() => setTab(t))).finished.catch(() => {});
@@ -110,7 +115,7 @@ function AppShell() {
         <div className="ac">Joint Brotherhood of Beachside Cock Enthusiasts</div>
       </div>
 
-      <main className="tab-main" key={tab}>
+      <main className={`tab-main${viaVT.current ? '' : ' stagger'}`} key={tab}>
         {tab==='today' && <TodayPage />}
         {tab==='events' && <EventsPage />}
         {tab==='house' && <HousePage />}

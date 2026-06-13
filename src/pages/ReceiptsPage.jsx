@@ -37,6 +37,30 @@ export default function ReceiptsPage() {
 }
 
 /* ============ SETTLE UP — one net number per person instead of receipt-by-receipt math ============ */
+// Brief one-shot confetti sprinkle in the beach palette — fires when the crew is
+// all square. Renders nothing under prefers-reduced-motion.
+function Confetti() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+  const C = ['#1a6b8a', '#d4715a', '#6b8c5a', '#c8a84b', '#8a5aaa'];
+  const pieces = Array.from({ length: 16 }, (_, i) => ({
+    left: (i * 6.1 + 3) % 96,
+    dl: (i % 6) * 0.05,
+    d: 0.9 + (i % 4) * 0.14,
+    color: C[i % 5],
+    r: ((i * 53) % 300 + 220) + 'deg',
+    w: i % 3 === 0 ? 9 : 6,
+    h: i % 3 === 0 ? 4 : 6,
+  }));
+  return (
+    <div className="confetti-layer" aria-hidden="true">
+      {pieces.map((p, i) => (
+        <span key={i} className="confetti-piece"
+          style={{ left: p.left + '%', background: p.color, width: p.w, height: p.h, '--d': p.d + 's', '--dl': p.dl + 's', '--r': p.r }} />
+      ))}
+    </div>
+  );
+}
+
 function SettleUp({ receipts, users, profile, onLogPayment }) {
   const { data: costData } = useDoc('config/cost');
   const { docs: payDocs } = useCollection('payments');
@@ -77,7 +101,8 @@ function SettleUp({ receipts, users, profile, onLogPayment }) {
   const allSquare = !creditorIds.length && !manualPending.length && owedToMe < 0.01 && houseLeft < 0.01 && inFlight < 0.01;
 
   return (
-    <div className="card" style={{borderColor:'var(--ocean)'}}>
+    <div className="card" style={{borderColor:'var(--ocean)',position:'relative'}}>
+      {allSquare && <Confetti />}
       <div className="card-body" style={{borderTop:'none',padding:'12px 14px'}}>
         <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:allSquare?0:8,display:'flex',alignItems:'center',gap:5}}>
           <ScaleIcon size={15}/>Settle up {allSquare && <span style={{color:'var(--sage)',fontWeight:'normal'}}>— ✓ all square, go enjoy the beach <span className="bob">🍹</span></span>}

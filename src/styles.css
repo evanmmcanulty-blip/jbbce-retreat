@@ -214,15 +214,25 @@ textarea{resize:vertical;min-height:60px}
    View Transitions where supported; a CSS-keyframe fallback elsewhere. */
 @keyframes tabRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes tabFade{to{opacity:0}}
+@keyframes cascadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @supports (view-transition-name:none){
   .tab-main{view-transition-name:tabmain}
-}
-@supports not (view-transition-name:none){
-  @media(prefers-reduced-motion:no-preference){
-    .tab-main{animation:tabRise .32s cubic-bezier(.22,.61,.36,1) both}
-  }
 }
 @media(prefers-reduced-motion:no-preference){
   ::view-transition-old(tabmain){animation:tabFade .18s ease both}
   ::view-transition-new(tabmain){animation:tabRise .32s cubic-bezier(.22,.61,.36,1) both}
+  /* Cold load (and non-VT swaps): sections cascade in. Suppressed during VT nav,
+     where the glide above is the entrance and a stagger would fight the snapshot. */
+  .tab-main.stagger > .page > *{animation:cascadeIn .5s cubic-bezier(.22,.61,.36,1) both}
+  .tab-main.stagger > .page > *:nth-child(1){animation-delay:.03s}
+  .tab-main.stagger > .page > *:nth-child(2){animation-delay:.08s}
+  .tab-main.stagger > .page > *:nth-child(3){animation-delay:.13s}
+  .tab-main.stagger > .page > *:nth-child(4){animation-delay:.18s}
+  .tab-main.stagger > .page > *:nth-child(5){animation-delay:.23s}
+  .tab-main.stagger > .page > *:nth-child(n+6){animation-delay:.28s}
 }
+/* Settle-up celebration */
+@keyframes confettiFall{0%{opacity:0;transform:translateY(-14px) rotate(0)}12%{opacity:1}100%{opacity:0;transform:translateY(96px) rotate(var(--r,300deg))}}
+.confetti-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:3}
+.confetti-piece{position:absolute;top:6px;border-radius:2px;animation:confettiFall var(--d,1s) ease-in forwards;animation-delay:var(--dl,0s)}
+@media(prefers-reduced-motion:reduce){.confetti-piece{display:none}}
