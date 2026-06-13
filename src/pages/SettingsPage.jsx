@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
 import Avatar from '../components/Avatar';
-import { UserIcon, LogInIcon, LogOutIcon, UsersIcon, SlidersIcon } from '../components/Icons';
+import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon } from '../components/Icons';
 
 export default function SettingsPage() {
   const { profile } = useAuth();
@@ -19,20 +19,19 @@ export default function SettingsPage() {
         <button className={`stab ${sub==='me'?'active':''}`} onClick={()=>setSub('me')}><UserIcon size={13}/>My Profile</button>
         <button className={`stab ${sub==='arrivals'?'active':''}`} onClick={()=>setSub('arrivals')}><LogInIcon size={13}/>Arrivals</button>
         <button className={`stab ${sub==='departures'?'active':''}`} onClick={()=>setSub('departures')}><LogOutIcon size={13}/>Departures</button>
-        <button className={`stab ${sub==='guests'?'active':''}`} onClick={()=>setSub('guests')}><UsersIcon size={13}/>Guests & Rooms</button>
         {isAdmin && <button className={`stab ${sub==='admin'?'active':''}`} onClick={()=>setSub('admin')}><SlidersIcon size={13}/>Admin</button>}
       </div>
       {sub==='me' && <MyProfile profile={profile} />}
       {sub==='arrivals' && <TravelTab kind="arr" users={users} profile={profile} isAdmin={isAdmin} />}
       {sub==='departures' && <TravelTab kind="dep" users={users} profile={profile} isAdmin={isAdmin} />}
-      {sub==='guests' && <GuestsTab users={users} isAdmin={isAdmin} />}
       {isAdmin && sub==='admin' && <AdminTab users={users} profile={profile} />}
     </div>
   );
 }
 
 function MyProfile({ profile }) {
-  const [avatar, setAvatar] = useState(profile?.avatar || '');
+  // Avatar holds a single emoji; strip any stray initials/digits that crept in.
+  const [avatar, setAvatar] = useState((profile?.avatar || '').replace(/[A-Za-z0-9\s]/g, ''));
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
   const [fullName, setFullName] = useState(profile?.fullName || profile?.displayName || '');
   const [saved, setSaved] = useState(false);
@@ -40,7 +39,7 @@ function MyProfile({ profile }) {
 
   async function save() {
     await updateDoc(doc(db, 'users', profile.uid), {
-      avatar: avatar.trim() || '⭐',
+      avatar: avatar.replace(/[A-Za-z0-9\s]/g, '').trim() || '⭐',
       displayName: displayName.trim(),
       fullName: fullName.trim(),
     });
@@ -50,7 +49,7 @@ function MyProfile({ profile }) {
   return (
     <div>
       <div style={{ display:'flex',alignItems:'center',gap:12,marginBottom:16 }}>
-        <span style={{ fontSize:42 }}>{profile?.avatar && profile.avatar!=='⭐' ? profile.avatar : '👤'}</span>
+        <span style={{ fontSize:42 }}>{avatar && avatar!=='⭐' ? avatar : '👤'}</span>
         <div>
           <div style={{ fontSize:18,fontWeight:'bold' }}>{profile?.displayName || profile?.email}</div>
           <div style={{ fontSize:12,color:'var(--muted)' }}>{profile?.email}</div>
@@ -204,47 +203,6 @@ function TravelTab({ kind, users, profile, isAdmin }) {
           </div>
         );
       })}
-    </div>
-  );
-}
-
-function GuestsTab({ users, isAdmin }) {
-  async function setRoom(uid, room) { await updateDoc(doc(db,'users',uid), { room }); }
-  return (
-    <div>
-      <div className="section-sub">{isAdmin ? 'Assign rooms — the cost split updates instantly.' : 'Current room assignments:'}</div>
-      {ROOMS.map(rm => {
-        const occ = users.filter(u => u.room === rm.id);
-        return (
-          <div key={rm.id} className="card">
-            <div className="card-body" style={{borderTop:'none',padding:'11px 14px'}}>
-              <b>{rm.name}</b>
-              <div style={{marginTop:5,display:'flex',gap:8,flexWrap:'wrap'}}>
-                {occ.length ? occ.map(u => (
-                  <span key={u.uid} className="check-pill sel" style={{cursor:'default'}}>
-                    {u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}
-                  </span>
-                )) : <span style={{fontSize:13,color:'var(--muted)'}}>Empty — open nights absorbed by occupied rooms</span>}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-      {isAdmin && (
-        <div style={{marginTop:14}}>
-          <div className="info-head">ASSIGN ROOMS</div>
-          {users.map(u => (
-            <div key={u.uid} style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'7px 0',borderBottom:'1px solid var(--border)'}}>
-              <span style={{fontSize:15}}>{u.avatar && u.avatar!=='⭐' ? u.avatar : '👤'} {u.displayName}</span>
-              <select style={{width:140}} value={u.room||''} onChange={e=>setRoom(u.uid, e.target.value)}>
-                <option value="">No room</option>
-                {ROOMS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
-            </div>
-          ))}
-          <div className="tip-box" style={{marginTop:10}}>💡 Fill-in guest taking over a vacated room? Assign them the room here and set their arrival date in Arrivals — the cost engine handles the rest.</div>
-        </div>
-      )}
     </div>
   );
 }

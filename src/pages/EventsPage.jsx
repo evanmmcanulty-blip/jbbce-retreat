@@ -33,7 +33,7 @@ export default function EventsPage() {
         <button className={`stab ${sub==='calendar'?'active':''}`} onClick={()=>setSub('calendar')}><CalendarIcon size={13}/>Calendar</button>
         <button className={`stab ${sub==='meals'?'active':''}`} onClick={()=>setSub('meals')}><UtensilsIcon size={13}/>Meals</button>
         <button className={`stab ${sub==='ideas'?'active':''}`} onClick={()=>setSub('ideas')}>
-          <LightbulbIcon size={13}/>Propose/Vote{ideas.length>0 && <span className="notif-dot">{ideas.length}</span>}
+          <LightbulbIcon size={13}/>Propose &amp; vote{ideas.length>0 && <span className="notif-dot">{ideas.length}</span>}
         </button>
       </div>
 

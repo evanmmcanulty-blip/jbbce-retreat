@@ -9,27 +9,53 @@ import { PAYMENT_METHODS, money } from '../constants';
 import { calcOwed } from '../utils/costEngine';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
-import { ScaleIcon } from '../components/Icons';
+import { ScaleIcon, ReceiptIcon, CreditCardIcon } from '../components/Icons';
+import CostSplit from '../components/CostSplit';
+import Payments from '../components/Payments';
 
 export default function ReceiptsPage() {
   const { profile } = useAuth();
   const { docs: receipts, loading } = useCollection('receipts');
   const { docs: users } = useCollection('users');
   const isAdmin = profile?.admin;
+  const isAccountant = profile?.accountant || isAdmin;
   const [editReceipt, setEditReceipt] = useState(null);
   const [payModal, setPayModal] = useState(null);
+  const [sub, setSub] = useState('settle');
 
   return (
     <div className="page">
-      <div className="section-title">Receipts</div>
-      <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
-      <SettleUp receipts={receipts} users={users} profile={profile} onLogPayment={setPayModal} />
-      <UploadForm profile={profile} users={users} />
-      {!loading && receipts.length===0 && <div className="empty-note">No receipts yet.</div>}
-      {[...receipts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r => (
-        <ReceiptItem key={r.id} r={r} users={users} profile={profile} isAdmin={isAdmin}
-          onEdit={()=>setEditReceipt(r)} onLogPayment={()=>setPayModal(r)} />
-      ))}
+      <div className="stabs">
+        <button className={`stab ${sub==='settle'?'active':''}`} onClick={()=>setSub('settle')}><ScaleIcon size={13}/>Settle up</button>
+        <button className={`stab ${sub==='receipts'?'active':''}`} onClick={()=>setSub('receipts')}><ReceiptIcon size={13}/>Receipts</button>
+        <button className={`stab ${sub==='rent'?'active':''}`} onClick={()=>setSub('rent')}><CreditCardIcon size={13}/>House rent</button>
+      </div>
+
+      {sub==='settle' && (
+        <SettleUp receipts={receipts} users={users} profile={profile} onLogPayment={setPayModal} />
+      )}
+
+      {sub==='receipts' && (
+        <>
+          <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
+          <UploadForm profile={profile} users={users} />
+          {!loading && receipts.length===0 && <div className="empty-note">No receipts yet.</div>}
+          {[...receipts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r => (
+            <ReceiptItem key={r.id} r={r} users={users} profile={profile} isAdmin={isAdmin}
+              onEdit={()=>setEditReceipt(r)} onLogPayment={()=>setPayModal(r)} />
+          ))}
+        </>
+      )}
+
+      {sub==='rent' && (
+        <>
+          <Payments isAccountant={isAccountant} profile={profile} />
+          <div className="divider" />
+          <div className="info-head" style={{marginTop:0}}><ScaleIcon size={12}/>HOW RENT SPLITS</div>
+          <CostSplit isAccountant={isAccountant} />
+        </>
+      )}
+
       {editReceipt && <EditReceiptModal r={editReceipt} users={users} onClose={()=>setEditReceipt(null)} />}
       {payModal && <LogPaymentModal r={payModal} profile={profile} users={users} onClose={()=>setPayModal(null)} />}
     </div>
@@ -142,7 +168,7 @@ function SettleUp({ receipts, users, profile, onLogPayment }) {
           <div style={{fontSize:13,padding:'5px 0'}}>Owed to you from your receipts: <b style={{color:'var(--sage)'}}>{money(owedToMe)}</b></div>
         )}
         {houseLeft > 0.01 && (
-          <div style={{fontSize:13,padding:'5px 0'}}>🏠 House fund: <b style={{color:'var(--coral)'}}>{money(houseLeft)}</b> left to send Chris — see House → Payments</div>
+          <div style={{fontSize:13,padding:'5px 0'}}>🏠 House fund: <b style={{color:'var(--coral)'}}>{money(houseLeft)}</b> left to send Chris — log it under the House rent tab</div>
         )}
         {!allSquare && totalIOwe > 0.01 && (
           <div style={{fontSize:12,color:'var(--muted)',marginTop:6}}>Tap a receipt to log your payment — the amount is prefilled.</div>

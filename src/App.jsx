@@ -77,9 +77,9 @@ function AppShell() {
 
   const TABS = [
     { id:'today', label:'Today', Icon: SunIcon },
-    { id:'events', label:'Events', Icon: CalendarIcon },
+    { id:'events', label:'Plans', Icon: CalendarIcon },
     { id:'house', label:'House', Icon: HomeIcon },
-    { id:'receipts', label:'Receipts', badge: myReceiptAlerts, Icon: ReceiptIcon },
+    { id:'receipts', label:'Money', badge: myReceiptAlerts, Icon: ReceiptIcon },
     { id:'info', label:'Info', badge: unseenBulletins, Icon: MapIcon },
   ];
 
@@ -90,7 +90,7 @@ function AppShell() {
           <Avatar user={profile} size={26} />
           <span className="header-name">{profile?.displayName?.split(' ')[0] || profile?.email}</span>
           <div className="header-actions">
-            <button className="icon-btn" title="Settings" onClick={() => navigate('settings')}>
+            <button className="icon-btn" title="Me" onClick={() => navigate('settings')}>
               <SlidersIcon size={18} />
             </button>
             <button className="btn-mini" onClick={() => signOut(auth)}>Sign out</button>
