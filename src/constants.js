@@ -62,6 +62,31 @@ export const PTOWN_LOCATIONS = [
   'Post Office Cabaret',
 ];
 
+// Curated P-Town restaurant list for group meal voting.
+// Verify hours/status before the trip — some spots have seasonal closures.
+export const PTOWN_RESTAURANTS = [
+  { id: 'lobster-pot',       name: 'The Lobster Pot',        vibe: 'P-Town landmark — clam chowder, lobster, harbor views, always packed', price: '$$' },
+  { id: 'fanizzis',          name: "Fanizzi's by the Sea",   vibe: 'Local favorite with water views, comfort food and great brunch', price: '$$' },
+  { id: 'mews',              name: 'Mews Restaurant & Café', vibe: 'Upscale American bistro with harbor views, two floors of vibe', price: '$$$' },
+  { id: 'red-inn',           name: 'The Red Inn',            vibe: 'Romantic upscale waterfront dining, intimate and special', price: '$$$$' },
+  { id: 'napis',             name: "Napi's Restaurant",      vibe: 'Beloved local institution, eclectic global menu, wonderfully quirky décor', price: '$$' },
+  { id: 'canteen',           name: 'The Canteen',            vibe: 'Casual counter-service — excellent lobster rolls, salads, sandwiches', price: '$' },
+  { id: 'jimmys',            name: "Jimmy's Hideaway",       vibe: 'Hearty Italian-American classics tucked off the main drag', price: '$$' },
+  { id: 'squealing-pig',     name: 'The Squealing Pig',      vibe: 'Laid-back gastropub with craft beer, burgers, and a fun crowd', price: '$' },
+  { id: 'ross-grill',        name: "Ross' Grill",            vibe: 'Sophisticated American, excellent wine list, upstairs harbor view', price: '$$$' },
+  { id: 'sals-place',        name: "Sal's Place",            vibe: 'Waterfront Italian with a patio and old-school charm', price: '$$' },
+  { id: 'strangers-saints',  name: 'Strangers & Saints',     vibe: 'Cocktail-forward American small plates, refined and lively', price: '$$$' },
+  { id: 'spiritus',          name: 'Spiritus Pizza',         vibe: 'The legendary late-night spot — a P-Town institution after midnight', price: '$' },
+  { id: 'pepes-wharf',       name: "Pepe's Wharf",          vibe: 'Casual seafood right on the water, fried clams and lobster rolls', price: '$$' },
+  { id: 'cafe-heaven',       name: 'Café Heaven',            vibe: 'Beloved breakfast/brunch spot, homey and sweet, long lines worth it', price: '$' },
+  { id: 'governor-bradford', name: 'Governor Bradford',      vibe: 'Dive bar with cheap drinks, pool tables, and no-frills pub food', price: '$' },
+  { id: 'post-office',       name: 'Post Office Café',       vibe: 'Dinner + cabaret entertainment later — fun night-out option', price: '$$' },
+  { id: 'victors',           name: "Victor's Restaurant",    vibe: 'Italian-American with a romantic patio, good pastas', price: '$$' },
+  { id: 'bayside-betsys',    name: "Bayside Betsy's",       vibe: 'Casual waterfront seafood, unpretentious and reliably good', price: '$$' },
+  { id: 'connies-bakery',    name: "Connie's Bakery",       vibe: 'Portuguese pastries and coffee — perfect quick breakfast on Commercial St', price: '$' },
+  { id: 'local-186',         name: 'Local 186',              vibe: 'Casual neighborhood bar and grill, solid American comfort food', price: '$' },
+];
+
 export function fmt12(t) {
   if (!t) return '';
   const [h, m] = t.split(':').map(Number);

@@ -3,7 +3,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
-import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isoDate, isNightEvent } from '../constants';
+import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_RESTAURANTS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isoDate, isNightEvent } from '../constants';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import { UtensilsIcon, CalendarIcon, SunIcon } from '../components/Icons';
@@ -19,6 +19,7 @@ export default function TodayPage() {
   const [voteModal, setVoteModal] = useState(null);
   const [pendingVote, setPendingVote] = useState('');
   const [flashMeal, setFlashMeal] = useState(null);
+  const [restaurantModal, setRestaurantModal] = useState(null);
 
   const d = TRIP_DAYS[viewIdx];
   const beforeTrip = today < TRIP_DAYS[0];
@@ -63,6 +64,14 @@ export default function TodayPage() {
       setTimeout(() => setFlashMeal(null), 700);
     } catch {
       alert('Vote didn\'t save — check your connection and try again.');
+    }
+  }
+
+  async function submitRestaurantVote(mt, rid) {
+    try {
+      await setDoc(doc(db,'meals',`${mt}-${viewIdx}`), { restaurantVotes: { [profile.uid]: rid } }, { merge: true });
+    } catch {
+      alert('Vote didn\'t save — try again.');
     }
   }
 
@@ -161,6 +170,21 @@ export default function TodayPage() {
                 <div style={{fontSize:10,color:'var(--muted)'}}>leading · {winner.votes} of {winner.total} vote{winner.total!==1?'s':''}</div>
               )}
               {!cooks && winner && winner.opt.value==='ill_cook' && <div style={{fontSize:11,color:'var(--muted)'}}>cook TBD — check Meals</div>}
+              {winner && winner.opt.value==='eat_out' && (() => {
+                const rvotes = md?.restaurantVotes||{};
+                const myRid = rvotes[profile?.uid];
+                const topRid = Object.entries(Object.entries(rvotes).reduce((a,[,r])=>{a[r]=(a[r]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1])[0]?.[0];
+                const topRest = topRid ? PTOWN_RESTAURANTS.find(r=>r.id===topRid) : null;
+                const voterCount = Object.keys(rvotes).length;
+                return (
+                  <div style={{fontSize:11,marginTop:2}}>
+                    {topRest && <span style={{color:'var(--muted)'}}>Leaning: <b>{topRest.name}</b> ({voterCount}){' '}</span>}
+                    <button className="rest-pick" onClick={e=>{e.stopPropagation();setRestaurantModal({mt});}}>
+                      {myRid ? `📍 ${PTOWN_RESTAURANTS.find(r=>r.id===myRid)?.name||'?'} (change)` : 'Where? →'}
+                    </button>
+                  </div>
+                );
+              })()}
               {myOpt
                 ? <div className="mc-you">Your vote: {myOpt.icon} {myOpt.label.replace(/^[^ ]+ /,'')} (tap to change)</div>
                 : <div className="mc-vote-prompt">⚠️ You haven't voted — tap to vote!</div>}
@@ -222,6 +246,45 @@ export default function TodayPage() {
           );
         })}
       </div>
+
+      {restaurantModal && (() => {
+        const md = getMealDoc(restaurantModal.mt);
+        const rvotes = md?.restaurantVotes||{};
+        return (
+          <Modal title={`${restaurantModal.mt} — where to eat?`} onClose={()=>setRestaurantModal(null)}>
+            <div style={{fontSize:12,color:'var(--muted)',marginBottom:10}}>Tap a spot to cast your vote. All votes visible to everyone.</div>
+            <div style={{display:'flex',flexDirection:'column',gap:6,maxHeight:'60vh',overflowY:'auto'}}>
+              {PTOWN_RESTAURANTS.map(r => {
+                const votersForThis = users.filter(u=>rvotes[u.uid]===r.id);
+                const myVote = rvotes[profile?.uid]===r.id;
+                return (
+                  <div key={r.id} onClick={()=>{submitRestaurantVote(restaurantModal.mt,r.id);setRestaurantModal(null);}}
+                    style={{display:'flex',alignItems:'flex-start',gap:10,padding:'9px 10px',borderRadius:8,cursor:'pointer',
+                      background:myVote?'var(--ol)':'transparent',
+                      border:`1px solid ${myVote?'var(--ocean)':'rgba(0,0,0,.1)'}`,
+                      transition:'background .15s'}}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontWeight:'bold',fontSize:13}}>{r.name}</div>
+                      <div style={{fontSize:11,color:'var(--muted)',marginTop:1}}>{r.vibe}</div>
+                    </div>
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:3,flexShrink:0}}>
+                      <span style={{fontSize:11,color:'var(--muted)',fontFamily:'var(--font-label)'}}>{r.price}</span>
+                      {votersForThis.length>0 && (
+                        <div style={{display:'flex',gap:2}}>
+                          {votersForThis.map(u=><Avatar key={u.uid} user={u} size={18} />)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{marginTop:10,textAlign:'center'}}>
+              <button className="btn-mini" onClick={()=>setRestaurantModal(null)}>Cancel</button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {voteModal && (
         <Modal title={`${voteModal.mt} — ${fmtFull(d)}`} onClose={()=>setVoteModal(null)}>

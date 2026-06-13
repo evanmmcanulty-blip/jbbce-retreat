@@ -3,9 +3,10 @@ import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
-import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_LOCATIONS, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent, safeUrl } from '../constants';
+import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent, safeUrl } from '../constants';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
+import PlaceInput from '../components/PlaceInput';
 
 export default function EventsPage() {
   const { profile } = useAuth();
@@ -211,7 +212,7 @@ function EditEventForm({ ev, onDone }) {
         <div className="form-group"><label>Cost</label><input value={form.cost} onChange={e=>set('cost',e.target.value)} /></div>
       </div>
       <div className="form-group"><label><input type="checkbox" checked={form.strict} onChange={e=>set('strict',e.target.checked)} style={{width:'auto',marginRight:6}} />Strict leaving time</label></div>
-      <div className="form-group"><label>Location</label><input value={form.loc} onChange={e=>set('loc',e.target.value)} /></div>
+      <div className="form-group"><label>Location</label><PlaceInput value={form.loc} onChange={v=>set('loc',v)} /></div>
       <div className="form-group"><label>Link</label><input value={form.url} onChange={e=>set('url',e.target.value)} /></div>
       <div className="form-group"><label>Details</label><textarea value={form.desc} onChange={e=>set('desc',e.target.value)} /></div>
       <div className="btn-row">
@@ -224,7 +225,7 @@ function EditEventForm({ ev, onDone }) {
 
 function AddEventForm({ profile }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title:'',dayIdx:'0',time:'',recurring:false,strict:false,cost:'',url:'',loc:PTOWN_LOCATIONS[0],desc:'' });
+  const [form, setForm] = useState({ title:'',dayIdx:'0',time:'',recurring:false,strict:false,cost:'',url:'',loc:'',desc:'' });
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   async function submit(e) {
     e.preventDefault();
@@ -232,7 +233,7 @@ function AddEventForm({ profile }) {
       ...form, dayIdx: form.recurring?null:parseInt(form.dayIdx),
       rsvps:{}, rsvpsByDay:{}, owner: profile.uid, ownerName: profile.displayName, createdAt: new Date().toISOString(),
     });
-    setForm({title:'',dayIdx:'0',time:'',recurring:false,strict:false,cost:'',url:'',loc:PTOWN_LOCATIONS[0],desc:''});
+    setForm({title:'',dayIdx:'0',time:'',recurring:false,strict:false,cost:'',url:'',loc:'',desc:''});
     setOpen(false);
   }
   return (
@@ -256,12 +257,7 @@ function AddEventForm({ profile }) {
             <div className="form-group"><label>Cost</label><input value={form.cost} onChange={e=>set('cost',e.target.value)} /></div>
             <div className="form-group"><label>Tickets / website</label><input value={form.url} onChange={e=>set('url',e.target.value)} placeholder="https://..." /></div>
           </div>
-          <div className="form-group"><label>Location</label>
-            <select value={form.loc} onChange={e=>set('loc',e.target.value)}>
-              {PTOWN_LOCATIONS.map(l=><option key={l}>{l}</option>)}
-              <option value="">Other</option>
-            </select>
-          </div>
+          <div className="form-group"><label>Location</label><PlaceInput value={form.loc} onChange={v=>set('loc',v)} /></div>
           <div className="form-group"><label>Details</label><textarea value={form.desc} onChange={e=>set('desc',e.target.value)} /></div>
           <button className="btn btn-primary" type="submit">Add event</button>
         </form>
@@ -350,7 +346,7 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
             <div className="form-group"><label>Est. cost</label><input value={form.cost} onChange={e=>set('cost',e.target.value)} /></div>
             <div className="form-group"><label>Link</label><input value={form.url} onChange={e=>set('url',e.target.value)} placeholder="https://..." /></div>
           </div>
-          <div className="form-group"><label>Location</label><input value={form.loc} onChange={e=>set('loc',e.target.value)} placeholder="optional" /></div>
+          <div className="form-group"><label>Location</label><PlaceInput value={form.loc} onChange={v=>set('loc',v)} placeholder="optional" /></div>
           <div className="btn-row">
             <button className="btn btn-secondary" onClick={()=>submit(false)}>Send to the boys for a vote 🗳</button>
             <button className="btn btn-primary" onClick={()=>submit(true)}>Add straight to Events ↗</button>

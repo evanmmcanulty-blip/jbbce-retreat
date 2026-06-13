@@ -115,6 +115,7 @@ textarea{resize:vertical;min-height:60px}
 .meal-card .mc-plan{font-size:13px;font-weight:bold}
 .meal-card .mc-you{font-size:11px;color:var(--sage);margin-top:3px}
 .mc-vote-prompt{font-size:11px;color:var(--gold);font-style:italic;margin-top:3px}
+.rest-pick{background:none;border:none;padding:0;color:var(--ocean);font-size:11px;font-family:var(--font-label);font-weight:600;letter-spacing:.03em;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .timeline-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
 .t-time{flex-shrink:0;width:62px;font-weight:bold;font-size:13px;color:var(--ocean)}
 .t-body{flex:1}
