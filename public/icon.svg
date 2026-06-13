@@ -1,0 +1,22 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="JBBCE Provincetown retreat">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6ebc4"/>
+      <stop offset="1" stop-color="#ecdaa0"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d7090"/>
+      <stop offset="1" stop-color="#13557a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="#ecdaa0"/>
+  <rect width="1024" height="624" fill="url(#sky)"/>
+  <circle cx="690" cy="298" r="142" fill="#d4715a"/>
+  <rect y="624" width="1024" height="400" fill="url(#sea)"/>
+  <rect y="620" width="1024" height="4" fill="#faf0cf" opacity="0.35"/>
+  <rect x="612" y="662" width="156" height="9" rx="4" fill="#d4715a" opacity="0.30"/>
+  <rect x="632" y="694" width="116" height="9" rx="4" fill="#d4715a" opacity="0.26"/>
+  <rect x="650" y="726" width="80" height="9" rx="4" fill="#d4715a" opacity="0.22"/>
+  <path d="M352 1014 L368 432 Q368 394 398 374 Q430 352 462 374 Q492 394 492 432 L508 1014 Z" fill="#10455c"/>
+  <rect x="374" y="452" width="112" height="13" rx="2" fill="#c8a84b"/>
+</svg>
