@@ -39,7 +39,7 @@ export default function ReceiptsPage() {
         <>
           <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
           <UploadForm profile={profile} users={users} />
-          {!loading && receipts.length===0 && <div className="empty-note">No receipts yet.</div>}
+          {!loading && receipts.length===0 && <div className="empty-note">No receipts yet — front cash for groceries or a boat? Snap it here and the split sorts itself.</div>}
           {[...receipts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r => (
             <ReceiptItem key={r.id} r={r} users={users} profile={profile} isAdmin={isAdmin}
               onEdit={()=>setEditReceipt(r)} onLogPayment={()=>setPayModal(r)} />

@@ -195,7 +195,7 @@ export default function TodayPage() {
 
       <div className="section-label"><CalendarIcon size={14}/><span>Schedule</span></div>
       {eventsToday.length===0 ? (
-        <div className="empty-note">Free day — check Events for ideas!</div>
+        <div className="empty-note">Free day — check Plans for ideas!</div>
       ) : eventsToday.map(ev => {
         const mine = rsvpStatus(ev, profile?.uid);
         const goingUsers = users.filter(u=>rsvpStatus(ev,u.uid)==='going');

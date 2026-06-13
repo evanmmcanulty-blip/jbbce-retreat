@@ -102,7 +102,7 @@ function EventList({ events, users, profile, selDay, isAdmin }) {
     alert(`Copied to ${fmtDOW(TRIP_DAYS[dayIdx])} ${fmtMon(TRIP_DAYS[dayIdx])} ${TRIP_DAYS[dayIdx].getDate()}`);
   }
 
-  if (events.length === 0) return <div className="empty-note">No events this day in this filter.</div>;
+  if (events.length === 0) return <div className="empty-note">Wide open this day — nothing booked in this filter.</div>;
 
   return events.map(ev => {
     const my = getRsvp(ev, profile?.uid);
@@ -269,7 +269,7 @@ function AddEventForm({ profile }) {
 
 /* ============ IDEAS — collaborative editing, voter avatars, my-vote indicator ============ */
 function IdeasSidebar({ ideas, users, profile, isAdmin }) {
-  if (!ideas.length) return <div style={{fontSize:12,color:'var(--muted)'}}>No proposed ideas yet.</div>;
+  if (!ideas.length) return <div style={{fontSize:12,color:'var(--muted)'}}>Nothing proposed yet — float an idea for the crew to vote on.</div>;
   return ideas.map(idea => {
     const yesUsers = users.filter(u => idea.votes?.[u.uid]==='yes');
     const noUsers = users.filter(u => idea.votes?.[u.uid]==='no');
@@ -355,7 +355,7 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
         </div>
       </div>
 
-      {ideas.length===0 && <div className="empty-note">No ideas proposed yet.</div>}
+      {ideas.length===0 && <div className="empty-note">Nothing proposed yet — float a show or a dinner and the crew votes.</div>}
       {ideas.map(idea => {
         const yesUsers = users.filter(u=>idea.votes?.[u.uid]==='yes');
         const noUsers = users.filter(u=>idea.votes?.[u.uid]==='no');

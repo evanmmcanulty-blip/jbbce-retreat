@@ -10,7 +10,9 @@
   --font-body:'Barlow',system-ui,sans-serif;
   --font-label:'Barlow Condensed',system-ui,sans-serif;
 }
-body{font-family:var(--font-body);background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-body);background:#f5f0e8;color:var(--text);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;font-variant-numeric:tabular-nums}
+/* Keyboard focus — visible ring for keyboard users only, invisible to mouse/touch */
+:focus-visible{outline:2px solid var(--om);outline-offset:2px}
 /* Masthead — faux-resort letterhead: big italic display vs tiny tracked caps */
 .hero{background:linear-gradient(165deg,#12506b,#1a6b8a 55%,#23789c);color:#fff;padding:26px 20px 18px;text-align:center}
 .hero h1{font-family:var(--font-display);font-size:36px;font-style:normal;font-weight:400;margin-bottom:6px;letter-spacing:.02em;line-height:1}

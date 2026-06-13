@@ -82,7 +82,7 @@ function BulletinBoard({ profile, isAdmin }) {
         </div>
         <button className="btn btn-primary" type="submit">Post announcement</button>
       </form>
-      {bulletins.length===0 && <div className="empty-note">No announcements yet.</div>}
+      {bulletins.length===0 && <div className="empty-note">Board's clear. Post the first heads-up — like "boat leaves 9am SHARP."</div>}
       {[...bulletins].sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')).map(b => {
         const confirmedUsers = users.filter(u=>b.gotIt?.includes(u.uid));
         const iGotIt = b.gotIt?.includes(profile?.uid);
