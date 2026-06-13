@@ -94,11 +94,11 @@ textarea{resize:vertical;min-height:60px}
 .rsvp-btn.maybe{background:var(--gold);color:#fff;border-color:var(--gold)}
 .rsvp-btn.out{background:#e8e0d4;color:var(--muted);border-color:#d0c8be}
 /* Day strip */
-.day-strip{display:flex;gap:5px;overflow-x:auto;padding-bottom:7px;margin-bottom:12px}
+.day-strip{display:flex;gap:6px;overflow-x:auto;padding:3px 1px 10px;margin-bottom:12px}
 .day-chip{flex-shrink:0;border:1.5px solid var(--border);border-radius:10px;padding:7px 10px;text-align:center;cursor:pointer;background:#fff;min-width:52px;transition:all .15s}
-.day-chip:hover{border-color:var(--om)}
-.day-chip.active{background:var(--ocean);color:#fff;border-color:var(--ocean);transform:scale(1.1);box-shadow:0 4px 14px rgba(26,107,138,.45)}
-.day-chip.today{border-color:var(--gold);border-width:2px}
+.day-chip:hover{border-color:var(--om);transform:translateY(-1px);box-shadow:0 2px 7px rgba(44,36,22,.1)}
+.day-chip.today{box-shadow:inset 0 0 0 1.5px var(--gold)}
+.day-chip.active{background:var(--ocean);color:#fff;border-color:var(--ocean);box-shadow:0 3px 10px rgba(26,107,138,.3)}
 .day-chip .dow{font-size:10px;opacity:.8;letter-spacing:.06em}
 .day-chip .dn{font-size:17px;font-weight:bold;line-height:1.2}
 .day-chip .dmo{font-size:10px;opacity:.7}
