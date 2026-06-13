@@ -9,6 +9,7 @@ import { PAYMENT_METHODS, money } from '../constants';
 import { calcOwed } from '../utils/costEngine';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
+import { ScaleIcon } from '../components/Icons';
 
 export default function ReceiptsPage() {
   const { profile } = useAuth();
@@ -78,8 +79,8 @@ function SettleUp({ receipts, users, profile, onLogPayment }) {
   return (
     <div className="card" style={{borderColor:'var(--ocean)'}}>
       <div className="card-body" style={{borderTop:'none',padding:'12px 14px'}}>
-        <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:allSquare?0:8}}>
-          ⚖️ Settle up {allSquare && <span style={{color:'var(--sage)',fontWeight:'normal'}}>— ✓ all square, go enjoy the beach <span className="bob">🍹</span></span>}
+        <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:14,marginBottom:allSquare?0:8,display:'flex',alignItems:'center',gap:5}}>
+          <ScaleIcon size={15}/>Settle up {allSquare && <span style={{color:'var(--sage)',fontWeight:'normal'}}>— ✓ all square, go enjoy the beach <span className="bob">🍹</span></span>}
         </div>
         {creditorIds.map(uid => {
           const u = users.find(x => x.uid === uid);
