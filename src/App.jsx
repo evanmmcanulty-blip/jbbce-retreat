@@ -17,7 +17,16 @@ import './styles.css';
 
 function AppShell() {
   const { user, profile } = useAuth();
-  const [tab, setTab] = useState('today');
+  // A push tap opens /?n=<tab>; honor it once, then clean the URL.
+  const [tab, setTab] = useState(() => {
+    const n = new URLSearchParams(window.location.search).get('n');
+    const valid = ['today', 'events', 'house', 'receipts', 'info', 'settings'];
+    if (n && valid.includes(n)) {
+      window.history.replaceState({}, '', window.location.pathname);
+      return n;
+    }
+    return 'today';
+  });
   // Fluid tab navigation: snapshot → swap → animate. flushSync makes React's
   // DOM update land synchronously so the View Transition captures the new
   // screen, not the old one. Degrades to an instant swap without the API or

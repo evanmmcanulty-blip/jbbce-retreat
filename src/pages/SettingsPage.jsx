@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
 import Avatar from '../components/Avatar';
-import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon } from '../components/Icons';
+import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon, BellIcon } from '../components/Icons';
+import { enablePush, disablePush, pushState } from '../lib/push';
 
 export default function SettingsPage() {
   const { profile } = useAuth();
@@ -75,6 +76,58 @@ function MyProfile({ profile }) {
         </div>
       </div>
       <button className="btn btn-primary" onClick={save}>{saved ? 'Saved! ✓' : 'Save changes'}</button>
+      <NotificationsToggle uid={profile?.uid} />
+    </div>
+  );
+}
+
+function NotificationsToggle({ uid }) {
+  const [state, setState] = useState('loading'); // loading|on|off|denied|needs-install|unsupported
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { pushState().then(setState); }, []);
+
+  if (state === 'loading' || state === 'unsupported') return null;
+
+  async function turnOn() {
+    setBusy(true);
+    try { await enablePush(uid); setState('on'); }
+    catch (e) { setState(['needs-install','denied'].includes(e.message) ? e.message : 'off'); }
+    finally { setBusy(false); }
+  }
+  async function turnOff() {
+    setBusy(true);
+    try { await disablePush(uid); } finally { setState('off'); setBusy(false); }
+  }
+
+  return (
+    <div style={{ marginTop:18, paddingTop:16, borderTop:'1px solid var(--border)' }}>
+      <div className="info-head" style={{ marginTop:0 }}><BellIcon size={12}/>NOTIFICATIONS</div>
+      {state === 'on' && (
+        <>
+          <div style={{ fontSize:13, color:'var(--muted)', marginBottom:8 }}>
+            On for this device — pings for heads-ups, receipts you're tagged in, and confirmed payments. Nothing else.
+          </div>
+          <button className="btn-mini" disabled={busy} onClick={turnOff}>Turn off</button>
+        </>
+      )}
+      {state === 'off' && (
+        <>
+          <div style={{ fontSize:13, color:'var(--muted)', marginBottom:8 }}>
+            Get a ping for important heads-ups, receipts you're tagged in, and confirmed payments. That's it — no spam.
+          </div>
+          <button className="btn btn-primary" disabled={busy} onClick={turnOn}>{busy ? '…' : 'Turn on notifications'}</button>
+        </>
+      )}
+      {state === 'needs-install' && (
+        <div style={{ fontSize:13, color:'var(--muted)' }}>
+          To get notifications on iPhone, add this app to your Home Screen first: tap <b>Share</b> → <b>Add to Home Screen</b>, then open it from there and flip this on.
+        </div>
+      )}
+      {state === 'denied' && (
+        <div style={{ fontSize:13, color:'var(--muted)' }}>
+          Notifications are blocked. Re-enable them in your phone's Settings → this app → Notifications, then reload.
+        </div>
+      )}
     </div>
   );
 }
