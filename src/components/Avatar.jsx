@@ -3,9 +3,13 @@ import { initials } from '../constants';
 
 export default function Avatar({ user, size = 28, status, onClick }) {
   const [showTip, setShowTip] = useState(false);
-  const hasEmoji = user?.avatar && user.avatar !== '⭐';
-  // Emoji avatars render as themselves; everyone else gets their color + initials
-  // (instead of nine identical 👤 silhouettes)
+  // The avatar field should hold a single emoji. Strip any stray ASCII (letters/
+  // digits/space) that crept in — e.g. "EM👾" → "👾" — so initials and an emoji
+  // never render stacked-and-clipped in the circle. Empty / ⭐ → color + initials
+  // (instead of nine identical 👤 silhouettes).
+  const rawAvatar = user?.avatar && user.avatar !== '⭐' ? user.avatar : '';
+  const emojiAvatar = rawAvatar.replace(/[A-Za-z0-9\s]/g, '').trim();
+  const hasEmoji = !!emojiAvatar;
   const style = {
     width: size, height: size,
     fontSize: hasEmoji ? size * 0.72 : size * 0.42,
@@ -22,7 +26,7 @@ export default function Avatar({ user, size = 28, status, onClick }) {
       onMouseLeave={() => setShowTip(false)}
       title={name}
     >
-      {hasEmoji ? user.avatar : initials(name)}
+      {hasEmoji ? emojiAvatar : initials(name)}
       {showTip && <div className="avatar-tooltip">{name}</div>}
     </div>
   );
