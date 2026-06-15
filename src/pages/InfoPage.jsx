@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useDoc } from '../hooks/useDoc';
 import { safeUrl, TRIP_DAYS, fmtDOW, fmtMon } from '../constants';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
-import { BellIcon, ShoppingCartIcon, LinkIcon, TicketIcon, AnchorIcon, BikeIcon, UtensilsIcon } from '../components/Icons';
+import { BellIcon, ShoppingCartIcon, LinkIcon, TicketIcon, AnchorIcon, BikeIcon, UtensilsIcon, MapPinIcon } from '../components/Icons';
 
 const BUILTINS = [
   { h:'FERRY & TRANSPORT', Icon: AnchorIcon, items:[
@@ -210,9 +211,17 @@ function GroceryList({ profile, isAdmin }) {
 
 function LinksTab({ profile, isAdmin }) {
   const { docs: custom } = useCollection('infoCustom');
+  const { data: linksConfig } = useDoc('config/links');
   const [form, setForm] = useState({ t:'',d:'',u:'' });
   const [nominateModal, setNominateModal] = useState(null);
   const [nomForm, setNomForm] = useState({ dayIdx:'', time:'' });
+  const [albumInput, setAlbumInput] = useState('');
+  const [editingAlbum, setEditingAlbum] = useState(false);
+
+  async function saveAlbum() {
+    await setDoc(doc(db, 'config', 'links'), { albumUrl: albumInput.trim() }, { merge: true });
+    setEditingAlbum(false);
+  }
 
   async function add(e) {
     e.preventDefault();
@@ -243,6 +252,54 @@ function LinksTab({ profile, isAdmin }) {
 
   return (
     <div>
+      <div className="info-head" style={{marginTop:0}}>📸 SHARED ALBUM</div>
+      {linksConfig?.albumUrl ? (
+        <div className="link-card">
+          <div className="link-icon">📷</div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:'bold',fontSize:14}}>Trip photos</div>
+            <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Shared Apple Photos album — opens in your Photos app</div>
+            <a className="link-url" href={linksConfig.albumUrl} target="_blank" rel="noopener noreferrer">Open in Photos ↗</a>
+          </div>
+          {isAdmin && (
+            <button className="btn-mini" onClick={()=>{setAlbumInput(linksConfig.albumUrl||'');setEditingAlbum(true);}}>Edit</button>
+          )}
+        </div>
+      ) : (
+        <div className="empty-note">
+          No shared album yet.
+          {isAdmin && !editingAlbum && (
+            <button className="btn-mini" style={{marginLeft:8}} onClick={()=>{setAlbumInput('');setEditingAlbum(true);}}>Add album link</button>
+          )}
+        </div>
+      )}
+      {isAdmin && editingAlbum && (
+        <div style={{marginBottom:12}}>
+          <div className="form-group">
+            <label>iCloud shared album URL</label>
+            <input value={albumInput} onChange={e=>setAlbumInput(e.target.value)} placeholder="https://www.icloud.com/photos/..." />
+          </div>
+          <div className="btn-row">
+            <button className="btn btn-primary" onClick={saveAlbum}>Save</button>
+            <button className="btn-mini" onClick={()=>setEditingAlbum(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      <div className="info-head"><MapPinIcon size={12}/>FIND MY — WHERE IS EVERYONE?</div>
+      <div className="link-card">
+        <div className="link-icon">📍</div>
+        <div>
+          <div style={{fontWeight:'bold',fontSize:14}}>Find My (iCloud)</div>
+          <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>Make sure you're sharing your location with the group in Find My before the trip. Tap to open the web version.</div>
+          <div style={{display:'flex',gap:12,marginTop:4,flexWrap:'wrap'}}>
+            <a className="link-url" href="https://www.icloud.com/find-my/" target="_blank" rel="noopener noreferrer">Open Find My web ↗</a>
+            <span style={{fontSize:12,color:'var(--muted)'}}>Native app is better</span>
+          </div>
+        </div>
+      </div>
+      <div className="divider" />
+
       {BUILTINS.map(sec => (
         <div key={sec.h}>
           <div className="info-head"><sec.Icon size={12}/>{sec.h}</div>

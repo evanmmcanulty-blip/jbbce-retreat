@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { useDoc } from '../hooks/useDoc';
-import { HomeIcon, UsersIcon, MapPinIcon, KeyIcon, ClipboardIcon } from '../components/Icons';
+import { HomeIcon, UsersIcon, MapPinIcon, KeyIcon, ClipboardIcon, ShoppingCartIcon } from '../components/Icons';
 import GuestsRooms from '../components/GuestsRooms';
+import Avatar from '../components/Avatar';
 
 export default function HousePage() {
   const { profile } = useAuth();
@@ -18,9 +19,11 @@ export default function HousePage() {
       <div className="stabs">
         <button className={`stab ${sub==='info'?'active':''}`} onClick={()=>setSub('info')}><HomeIcon size={13}/>House Info</button>
         <button className={`stab ${sub==='guests'?'active':''}`} onClick={()=>setSub('guests')}><UsersIcon size={13}/>Guests & Rooms</button>
+        <button className={`stab ${sub==='gear'?'active':''}`} onClick={()=>setSub('gear')}><ShoppingCartIcon size={13}/>Gear</button>
       </div>
       {sub==='info' && <HouseInfo isAdmin={isAdmin} />}
       {sub==='guests' && <GuestsRooms users={users} isAdmin={isAdmin} />}
+      {sub==='gear' && <GearList profile={profile} users={users} isAdmin={isAdmin} />}
     </div>
   );
 }
@@ -83,6 +86,59 @@ function HouseInfo({ isAdmin }) {
           <div className="btn-row"><button className="btn btn-primary" onClick={save}>Save</button><button className="btn-mini" onClick={()=>setEditing(false)}>Cancel</button></div>
         </div>
       )}
+    </div>
+  );
+}
+
+function GearList({ profile, users, isAdmin }) {
+  const { docs: gear } = useCollection('gear');
+  const [what, setWhat] = useState('');
+  const [qty, setQty] = useState('');
+
+  async function add(e) {
+    e.preventDefault();
+    if (!what.trim()) return;
+    await addDoc(collection(db, 'gear'), {
+      what: what.trim(),
+      qty: qty.trim(),
+      byId: profile.uid,
+      byName: profile.displayName,
+      createdAt: new Date().toISOString(),
+    });
+    setWhat(''); setQty('');
+  }
+
+  return (
+    <div>
+      <div className="section-sub">What is everyone bringing? Add gear so there's no overlap — and no one forgets the speaker.</div>
+      <form onSubmit={add} style={{marginBottom:14}}>
+        <div className="grid2">
+          <div className="form-group"><label>Item</label><input value={what} onChange={e=>setWhat(e.target.value)} placeholder="e.g. Bluetooth speaker" /></div>
+          <div className="form-group"><label>Qty / note (optional)</label><input value={qty} onChange={e=>setQty(e.target.value)} placeholder="e.g. the big JBL" /></div>
+        </div>
+        <button className="btn btn-primary" type="submit">I'm bringing this</button>
+      </form>
+
+      {gear.length === 0 && <div className="empty-note">Nothing listed yet — add something you're packing!</div>}
+      {[...gear].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')).map(g => {
+        const bringer = users.find(u => u.uid === g.byId);
+        const mine = g.byId === profile?.uid;
+        return (
+          <div key={g.id} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 0',borderBottom:'1px solid var(--border)',flexWrap:'wrap'}}>
+            <div style={{flex:1,minWidth:160}}>
+              <div style={{fontSize:14,fontWeight:'bold'}}>{g.what}</div>
+              {g.qty && <div style={{fontSize:12,color:'var(--muted)'}}>{g.qty}</div>}
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}>
+              {bringer && <Avatar user={bringer} size={22} />}
+              <span style={{fontSize:12,color:'var(--muted)'}}>{bringer?.displayName?.split(' ')[0]}</span>
+            </div>
+            {(mine || isAdmin) && (
+              <button className="btn btn-danger" onClick={async()=>{if(window.confirm('Remove?'))await deleteDoc(doc(db,'gear',g.id));}}>🗑</button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -48,3 +48,23 @@ If all four work, we're golden. 🍹
 
 ---
 Questions: text Evan. Technical detail lives in `docs/` if you're curious.
+
+---
+
+## Dev deploy runbook (Evan)
+
+Always deploy rules before hosting to avoid a window where new features write to uncovered collections:
+
+```bash
+# Rules first, then everything else
+firebase deploy --only firestore:rules,storage
+firebase deploy --only hosting,functions
+```
+
+Or just `firebase deploy` — Firebase internally sequences rules before hosting.
+
+**Post-deploy smoke tests:**
+- Add a gear item as a non-admin (should succeed)
+- Attempt to edit `config/cost` as a non-admin (should be denied with a FirebaseError)
+
+**Rollback:** Firebase Console → Hosting → Releases → Roll back.

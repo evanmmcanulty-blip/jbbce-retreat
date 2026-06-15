@@ -3,6 +3,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useWeather } from '../hooks/useWeather';
 import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_RESTAURANTS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isoDate, isNightEvent } from '../constants';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
@@ -13,6 +14,7 @@ export default function TodayPage() {
   const { docs: events } = useCollection('events');
   const { docs: meals } = useCollection('meals');
   const { docs: users } = useCollection('users');
+  const { weather, live: weatherLive } = useWeather();
   const today = new Date();
   const realIdx = TRIP_DAYS.findIndex(d => dayKey(d)===dayKey(today));
   const [viewIdx, setViewIdx] = useState(realIdx >= 0 ? realIdx : 0);
@@ -23,7 +25,7 @@ export default function TodayPage() {
 
   const d = TRIP_DAYS[viewIdx];
   const beforeTrip = today < TRIP_DAYS[0];
-  const w = WEATHER_AVG[viewIdx] || WEATHER_AVG[0];
+  const w = weather[viewIdx] || weather[0];
 
   const eventsToday = events.filter(ev => ev.recurring || ev.dayIdx===viewIdx)
     .sort((a,b)=>(a.time||'').localeCompare(b.time||''));
@@ -105,9 +107,11 @@ export default function TodayPage() {
 
   return (
     <div className="page">
-      {realIdx < 0 && (
+      {beforeTrip && <PreTripBanner users={users} events={events} />}
+
+      {!beforeTrip && realIdx < 0 && (
         <div className="tip-box" style={{marginBottom:12}}>
-          📅 {beforeTrip ? "Retreat hasn't started — previewing day one." : "Retreat wrapped — reliving the glory."} Jump around with the day picker below.
+          📅 Retreat wrapped — reliving the glory. Jump around with the day picker below.
         </div>
       )}
 
@@ -118,23 +122,32 @@ export default function TodayPage() {
         </div>
       )}
 
-      <div className={`today-hero ${sky}`}>
-        <div className="bd"><span>{fmtFull(d)}</span><span>{skyIcon}</span></div>
-        <div className="dl">DAY {viewIdx+1} OF {TRIP_DAYS.length} · JBBCE EXECUTIVE RETREAT</div>
-      </div>
+      {!beforeTrip && (
+        <>
+          <div className={`today-hero ${sky}`}>
+            <div className="bd"><span>{fmtFull(d)}</span><span>{skyIcon}</span></div>
+            <div className="dl">DAY {viewIdx+1} OF {TRIP_DAYS.length} · JBBCE EXECUTIVE RETREAT</div>
+          </div>
 
-      <div style={{background:'var(--ol)',border:'1px solid var(--om)',borderRadius:8,padding:'9px 12px',display:'flex',alignItems:'center',gap:10,marginBottom:12,fontSize:14}}>
-        <span style={{fontSize:22}}>{w.icon}</span>
-        <div><b>Typical late June:</b> {w.hi}° high / {w.lo}° low</div>
-      </div>
+          <div style={{background:'var(--ol)',border:'1px solid var(--om)',borderRadius:8,padding:'9px 12px',display:'flex',alignItems:'center',gap:10,marginBottom:12,fontSize:14}}>
+            <span style={{fontSize:22}}>{w.icon}</span>
+            <div>
+              {weatherLive
+                ? <><b>{w.shortForecast || 'Forecast'}:</b> {w.hi}° high / {w.lo}° low</>
+                : <><b>Typical late June:</b> {w.hi}° high / {w.lo}° low</>
+              }
+            </div>
+          </div>
+        </>
+      )}
 
-      {strictOnes.length>0 && (
+      {!beforeTrip && strictOnes.length>0 && (
         <div className="tip-box" style={{background:'var(--cl)',borderColor:'var(--coral)',color:'#8a3520',marginBottom:12}}>
           ⏱ <b>Don't be late:</b> {strictOnes.map(e=>`${e.title} at ${fmt12(e.time)}`).join(', ')}
         </div>
       )}
 
-      {(arrivals.length>0 || departures.length>0) && (
+      {!beforeTrip && (arrivals.length>0 || departures.length>0) && (
         <div className="tip-box" style={{background:'var(--ol)',borderColor:'var(--om)',color:'var(--ocean)',marginBottom:12}}>
           {arrivals.map(u => (
             <div key={u.uid} style={{padding:'2px 0'}}>
@@ -152,8 +165,8 @@ export default function TodayPage() {
         </div>
       )}
 
-      <div className="section-label"><UtensilsIcon size={14}/><span>Meals today</span></div>
-      <div className="meal-cards">
+      {!beforeTrip && <div className="section-label"><UtensilsIcon size={14}/><span>Meals today</span></div>}
+      {!beforeTrip && <div className="meal-cards">
         {MEAL_TYPES.map(mt => {
           const md = getMealDoc(mt);
           const myVote = md?.votes?.[profile?.uid] || '';
@@ -191,10 +204,10 @@ export default function TodayPage() {
             </div>
           );
         })}
-      </div>
+      </div>}
 
-      <div className="section-label"><CalendarIcon size={14}/><span>Schedule</span></div>
-      {eventsToday.length===0 ? (
+      {!beforeTrip && <div className="section-label"><CalendarIcon size={14}/><span>Schedule</span></div>}
+      {!beforeTrip && (eventsToday.length===0 ? (
         <div className="empty-note">Free day — check Plans for ideas!</div>
       ) : eventsToday.map(ev => {
         const mine = rsvpStatus(ev, profile?.uid);
@@ -219,10 +232,10 @@ export default function TodayPage() {
             </div>
           </div>
         );
-      })}
+      }))}
 
-      <div style={{marginTop:16,fontSize:12,fontWeight:'bold',color:'var(--muted)',marginBottom:6}}>Jump to a day:</div>
-      <div className="day-strip">
+      {!beforeTrip && <div style={{marginTop:16,fontSize:12,fontWeight:'bold',color:'var(--muted)',marginBottom:6}}>Jump to a day:</div>}
+      {!beforeTrip && <div className="day-strip">
         {TRIP_DAYS.map((day,i)=>(
           <div key={i} className={`day-chip ${i===viewIdx?'active':''} ${dayKey(day)===dayKey(today)?'today':''}`} onClick={()=>setViewIdx(i)}>
             <div className="dow">{fmtDOW(day)}</div>
@@ -230,12 +243,12 @@ export default function TodayPage() {
             <div className="dmo">{fmtMon(day)}</div>
           </div>
         ))}
-      </div>
+      </div>}
 
       <div className="section-label" style={{marginTop:14,color:'var(--muted)'}}><SunIcon size={13}/><span>Week at a glance</span></div>
       <div className="weather-strip">
         {TRIP_DAYS.map((day,i)=>{
-          const ww = WEATHER_AVG[i]||WEATHER_AVG[0];
+          const ww = weather[i]||weather[0];
           return (
             <div key={i} className="weather-day" style={i===viewIdx?{borderColor:'var(--ocean)'}:{}} onClick={()=>setViewIdx(i)}>
               <div style={{fontSize:10,color:'var(--muted)'}}>{fmtDOW(day)} {day.getDate()}</div>
@@ -286,7 +299,7 @@ export default function TodayPage() {
         );
       })()}
 
-      {voteModal && (
+      {!beforeTrip && voteModal && (
         <Modal title={`${voteModal.mt} — ${fmtFull(d)}`} onClose={()=>setVoteModal(null)}>
           {MEAL_OPTIONS.map(opt => {
             const votersFor = users.filter(u=>voteMealDoc?.votes?.[u.uid]===opt.value);
@@ -305,6 +318,57 @@ export default function TodayPage() {
             <button className="btn-mini" onClick={()=>setVoteModal(null)}>Cancel</button>
           </div>
         </Modal>
+      )}
+    </div>
+  );
+}
+
+function PreTripBanner({ users, events }) {
+  const msLeft = TRIP_DAYS[0] - new Date();
+  const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
+  const day1Events = events.filter(ev => ev.dayIdx === 0 || ev.recurring).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const crew = users.filter(u => u.approved !== false);
+
+  return (
+    <div>
+      <div style={{
+        background:'var(--ol)',border:'1px solid var(--om)',borderRadius:12,
+        padding:'20px 16px',marginBottom:14,textAlign:'center',
+      }}>
+        <div style={{fontSize:13,color:'var(--muted)',letterSpacing:'.08em',marginBottom:4}}>COUNTDOWN TO PTOWN</div>
+        <div style={{fontSize:48,fontWeight:900,color:'var(--ocean)',lineHeight:1}}>{daysLeft}</div>
+        <div style={{fontSize:15,color:'var(--muted)',marginTop:4}}>day{daysLeft!==1?'s':''} to go · Jun 29, Provincetown</div>
+      </div>
+
+      <div className="info-head" style={{marginTop:0}}>WHO'S IN ({crew.length})</div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:10,marginBottom:16}}>
+        {crew.map(u => (
+          <div key={u.uid} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+            <Avatar user={u} size={36} />
+            <div style={{fontSize:11,color:'var(--muted)'}}>{u.displayName?.split(' ')[0]}</div>
+          </div>
+        ))}
+      </div>
+
+      {day1Events.length > 0 && (
+        <>
+          <div className="info-head">DAY 1 PREVIEW — MON JUN 29</div>
+          {day1Events.slice(0,4).map(ev => (
+            <div key={ev.id} className="timeline-item" style={{opacity:.85}}>
+              <div className="t-time">{ev.time ? fmt12(ev.time) : 'TBD'}</div>
+              <div className="t-body">
+                <div style={{fontWeight:'bold',fontSize:13}}>{ev.title}</div>
+                {ev.desc && <div style={{fontSize:12,color:'var(--muted)'}}>{ev.desc}</div>}
+              </div>
+            </div>
+          ))}
+          {day1Events.length > 4 && (
+            <div style={{fontSize:12,color:'var(--muted)',textAlign:'center',marginTop:4}}>+{day1Events.length-4} more · see Plans tab</div>
+          )}
+        </>
+      )}
+      {day1Events.length === 0 && (
+        <div className="empty-note">No day 1 events yet — add them in Plans.</div>
       )}
     </div>
   );

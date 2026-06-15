@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
@@ -35,6 +35,10 @@ function AppShell() {
   // Tracks whether the current screen arrived via a View Transition. The VT glide
   // owns tab-to-tab nav; the per-section cascade owns cold load (no VT to conflict
   // with). This ref decides which entrance the incoming .tab-main gets.
+  // Hold the boot loader for a beat even when auth restores instantly, so the
+  // brand moment actually registers instead of flashing by in a few ms.
+  const [minWait, setMinWait] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setMinWait(false), 900); return () => clearTimeout(t); }, []);
   const viaVT = useRef(false);
   const navigate = (t) => {
     if (t === tab) return;
@@ -50,7 +54,7 @@ function AppShell() {
   const { docs: receipts } = useCollection(ready ? 'receipts' : null);
   const { docs: bulletins } = useCollection(ready ? 'bulletins' : null);
 
-  if (user === undefined) return <Loader />;
+  if (user === undefined || minWait) return <Loader />;
   if (!user) return <AuthPage />;
 
   // Approval gate: new accounts wait for Brandon before seeing trip data

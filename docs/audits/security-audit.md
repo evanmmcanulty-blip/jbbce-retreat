@@ -74,3 +74,35 @@ authenticated machine — **not yet deployed; manual step.**
 No test infrastructure exists; rules-emulator tests would be the right guard
 but are heavier than this project warrants right now. Re-test manually after
 deploy: a non-admin attempting to edit config/cost should be denied.
+
+---
+
+## 2026-06-15 update — Commit c7a6024
+
+### SEC-07 — High — `gear` collection has no Firestore rules
+`HousePage.jsx` writes to collection `gear` (added 2026-06-15) but `firestore.rules` has no `match /gear/{id}` block. The catch-all for unmatched paths in Firestore rules **denies** by default in production mode — so the UI silently fails every `addDoc`/`deleteDoc` against `gear`. Fix: add rules matching the intended ownership model.
+
+**Required addition to `firestore.rules`:**
+```
+match /gear/{id} {
+  allow read: if isApproved();
+  allow create: if isApproved() && request.resource.data.byId == request.auth.uid;
+  allow delete: if isAdmin() || resource.data.byId == request.auth.uid;
+}
+```
+
+### SEC-08 — Medium — Storage read gated on auth, not approval
+`storage.rules` line 6: `allow read: if request.auth != null;` — any Firebase-authenticated user can read receipt photos, even unapproved accounts. Approved accounts can see the photos via the UI, but an unapproved user who knows the `receipts/{file}` path can access them directly.
+
+**Fix:** change read rule to `if request.auth != null && request.auth.token.email_verified == true` — or, simpler for this use case, accept the current behavior since unapproved users can't discover file names from the Firestore data they're denied.
+
+**Risk calibration:** Low practical risk (unapproved users would have to guess receipt file names). Medium in principle. Noting for completeness.
+
+### `ideas` vote null-set bug — Medium
+`EventsPage.jsx` IdeasSidebar vote toggle: `{ [\`votes.${profile.uid}\`]: mv==='yes' ? null : 'yes' }` — sets the field to `null` (leaves a null entry) instead of deleting it. Use `deleteField()` to actually remove the vote. Same pattern repeated in the "No" vote toggle.
+
+**File:** `src/pages/EventsPage.jsx` (IdeasSidebar component, vote buttons)
+
+### Status of prior findings
+- SEC-01 through SEC-06: all addressed in `firestore.rules` and `storage.rules` as of 2026-06-12. No regressions observed.
+- New `config/links` doc: correctly covered by the existing `match /config/{docId}` rule (admin write, approved read). No action needed.

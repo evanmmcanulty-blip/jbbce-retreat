@@ -286,9 +286,9 @@ function IdeasSidebar({ ideas, users, profile, isAdmin }) {
         {mv && <div style={{fontSize:10,color:'var(--ocean)',marginBottom:4}}>Your vote: {mv==='yes'?'👍 Yes':'👎 No'}</div>}
         <div className="btn-row">
           <button className="btn-mini" style={mv==='yes'?{borderColor:'var(--sage)',color:'var(--sage)',fontWeight:'bold'}:{}}
-            onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='yes'?null:'yes'})}>👍</button>
+            onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='yes'?deleteField():'yes'})}>👍</button>
           <button className="btn-mini" style={mv==='no'?{borderColor:'var(--coral)',color:'var(--coral)',fontWeight:'bold'}:{}}
-            onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='no'?null:'no'})}>👎</button>
+            onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='no'?deleteField():'no'})}>👎</button>
           {canP && <button className="btn-mini" onClick={async()=>{
             await addDoc(collection(db,'events'),{title:idea.title,dayIdx:idea.suggestedDayIdx??0,time:idea.suggestedTime||'',recurring:false,strict:false,cost:idea.cost||'',url:idea.url||'',loc:idea.loc||'',desc:idea.desc||'',rsvps:{},rsvpsByDay:{},owner:idea.by,ownerName:idea.byName,createdAt:new Date().toISOString()});
             await deleteDoc(doc(db,'ideas',idea.id));
@@ -413,9 +413,9 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
 
                 <div className="rsvp-row">
                   <button className={`rsvp-btn ${mv==='yes'?'going':''}`}
-                    onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='yes'?null:'yes'})}>👍 Yes!</button>
+                    onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='yes'?deleteField():'yes'})}>👍 Yes!</button>
                   <button className={`rsvp-btn ${mv==='no'?'out':''}`}
-                    onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='no'?null:'no'})}>👎 Nope</button>
+                    onClick={async()=>await updateDoc(doc(db,'ideas',idea.id),{[`votes.${profile.uid}`]:mv==='no'?deleteField():'no'})}>👎 Nope</button>
                 </div>
 
                 {/* Comments with names + avatars */}

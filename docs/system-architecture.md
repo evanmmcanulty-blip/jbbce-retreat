@@ -1,6 +1,6 @@
 # System Architecture — jbbce-retreat
 
-Current state as of 2026-06-12 (post-handoff hardening).
+Current state as of 2026-06-15 (post-feature additions: countdown, live weather NWS, gear list, Apple album + Find My links).
 
 ## What it is
 Mobile-first web app coordinating a 9-person, 13-day Provincetown house trip
@@ -16,8 +16,8 @@ groceries, local tips.
   author's Google account — transfer pending):
   - **Auth** — email/password; new signups gated behind admin approval.
   - **Firestore** — collections: `users`, `events`, `ideas`, `meals`,
-    `receipts`, `bulletins`, `groceries`, `infoCustom`, `payments`,
-    `config/{house,cost}`. Per-collection rules in `firestore.rules`
+    `receipts`, `bulletins`, `groceries`, `infoCustom`, `payments`, `gear`,
+    `config/{house,cost,links}`. Per-collection rules in `firestore.rules`
     (ownership + field-scoped updates via `diff().affectedKeys()`).
     Persistent local cache enabled (offline writes queue).
   - **Storage** — receipt photos under `receipts/`, images <10 MB only.
@@ -41,8 +41,14 @@ groceries, local tips.
 `PORT=3001 BROWSER=none npx react-scripts start` (login page only — app is
 behind prod Firebase auth).
 
+## New hooks / utilities (2026-06-15)
+- `src/hooks/useWeather.js` — NWS API fetch for Provincetown forecast; 2h
+  localStorage cache; falls back to WEATHER_AVG averages silently.
+
 ## Known structural debt (accepted)
 - CRA is EOL-ware; fine for this trip, migrate (Vite) only if the app gets a
   second life.
 - `AvatarRow.jsx` is unused.
 - px-based inline type sizes (rem conversion deferred).
+- `gear` collection has no Firestore rules yet — any approved user can write
+  anything. Fix: add rules before deploy (see findings).
