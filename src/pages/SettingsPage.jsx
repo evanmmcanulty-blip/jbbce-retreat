@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
 import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
 import Avatar from '../components/Avatar';
-import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon, BellIcon } from '../components/Icons';
+import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon, BellIcon, CreditCardIcon } from '../components/Icons';
 import { enablePush, disablePush, pushState } from '../lib/push';
 
 export default function SettingsPage() {
@@ -35,6 +35,8 @@ function MyProfile({ profile }) {
   const [avatar, setAvatar] = useState((profile?.avatar || '').replace(/[A-Za-z0-9\s]/g, ''));
   const [displayName, setDisplayName] = useState(profile?.displayName || '');
   const [fullName, setFullName] = useState(profile?.fullName || profile?.displayName || '');
+  const [venmoHandle, setVenmoHandle] = useState(profile?.venmoHandle || '');
+  const [phone, setPhone] = useState(profile?.phone || '');
   const [saved, setSaved] = useState(false);
   const roomName = ROOMS.find(r => r.id === profile?.room)?.name;
 
@@ -43,6 +45,8 @@ function MyProfile({ profile }) {
       avatar: avatar.replace(/[A-Za-z0-9\s]/g, '').trim() || '⭐',
       displayName: displayName.trim(),
       fullName: fullName.trim(),
+      venmoHandle: venmoHandle.trim().replace(/^@/, ''), // store bare handle
+      phone: phone.replace(/\D/g, ''),                   // digits only
     });
     setSaved(true); setTimeout(() => setSaved(false), 2500);
   }
@@ -75,6 +79,27 @@ function MyProfile({ profile }) {
           iPhone: tap 🌐 key · Android: emoji button · Mac: ⌘+Ctrl+Space · Windows: Win+.
         </div>
       </div>
+
+      <div className="divider" />
+      <div className="info-head" style={{ marginTop:0 }}><CreditCardIcon size={12}/>PAYMENT INFO</div>
+      <div style={{ fontSize:12, color:'var(--muted)', marginBottom:10 }}>
+        So the crew can pay you back in one tap from a receipt. Crew-only.
+      </div>
+      <div className="form-group">
+        <label>Venmo username</label>
+        <input value={venmoHandle} onChange={e=>setVenmoHandle(e.target.value)} placeholder="brandon-nwokocha" />
+        <div style={{ fontSize:11, color: venmoHandle ? 'var(--sage)' : 'var(--muted)', marginTop:3 }}>
+          {venmoHandle ? `venmo.com/${venmoHandle.trim().replace(/^@/, '')}` : 'No @ needed — others get a one-tap Venmo link.'}
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Phone (for Apple Cash)</label>
+        <input type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="469 693 0889" />
+        <div style={{ fontSize:11, color: phone ? 'var(--sage)' : 'var(--muted)', marginTop:3 }}>
+          {phone ? `Apple Cash opens Messages to ${phone.replace(/\D/g, '')}` : 'Lets others send you Apple Cash via Messages.'}
+        </div>
+      </div>
+
       <button className="btn btn-primary" onClick={save}>{saved ? 'Saved! ✓' : 'Save changes'}</button>
       <NotificationsToggle uid={profile?.uid} />
     </div>

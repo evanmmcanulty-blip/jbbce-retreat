@@ -13,6 +13,18 @@ import { ScaleIcon, ReceiptIcon, CreditCardIcon } from '../components/Icons';
 import CostSplit from '../components/CostSplit';
 import Payments from '../components/Payments';
 
+// One-tap pay deep links. Venmo uses a universal link (opens the app on iPhone if
+// installed). Apple Cash has no amount deep-link, so we open Messages to the number.
+function openVenmo(handle, amount, note) {
+  if (!handle) return;
+  const amt = (Number(amount) || 0).toFixed(2);
+  window.open(`https://venmo.com/${handle.replace(/^@/, '')}?txn=pay&amount=${amt}&note=${encodeURIComponent(note || '')}`, '_blank', 'noopener');
+}
+function openAppleCash(phone) {
+  if (!phone) return;
+  window.open(`sms:${String(phone).replace(/\D/g, '')}`, '_blank');
+}
+
 export default function ReceiptsPage() {
   const { profile } = useAuth();
   const { docs: receipts, loading } = useCollection('receipts');
@@ -99,6 +111,8 @@ function SettleUp({ receipts, users, profile, onLogPayment }) {
   const manualPending = [];
   receipts.forEach(r => {
     if (r.fullyPaid || r.by === me || !r.whoIds?.includes(me)) return;
+    // Someone confirmed they covered my share — I'm settled on this one
+    if (Object.values(r.payments || {}).some(p => p.confirmed && p.coveredUids?.includes(me))) return;
     const p = r.payments?.[me];
     if (p?.confirmed) return;
     if (p) { inFlight += p.amount || 0; return; }
@@ -290,6 +304,7 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
   const owedToUploader = Math.max(0, (r.amt||0) - uploaderPortion);
   const remaining = Math.max(0, owedToUploader - confirmedTotal);
   const myPayment = r.payments?.[profile?.uid];
+  const coveredByOther = others.some(uid => r.payments?.[uid]?.confirmed && r.payments?.[uid]?.coveredUids?.includes(profile?.uid));
 
   return (
     <div className={`receipt-item ${r.fullyPaid?'receipt-paid':''}`}>
@@ -302,7 +317,8 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
         <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
           <div style={{fontWeight:'bold',fontSize:14}}>{r.desc}</div>
           {r.fullyPaid && <span className="badge badge-s">✓ Fully paid</span>}
-          {iAmTagged && !myPayment?.confirmed && !r.fullyPaid && <span className="notif-dot">You owe!</span>}
+          {iAmTagged && !myPayment?.confirmed && !coveredByOther && !r.fullyPaid && <span className="notif-dot">You owe!</span>}
+          {coveredByOther && <span className="badge badge-s">✓ Covered</span>}
         </div>
         <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>
           {money(r.amt)} total · {r.split==='even'?'even split':'manual split'} · by <b>{r.byName}</b> · {new Date(r.date).toLocaleDateString()}
@@ -327,13 +343,17 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
             const u = users.find(x=>x.uid===uid);
             const p = r.payments?.[uid];
             if (!u) return null;
+            const coveredBy = !p && others.find(o => r.payments?.[o]?.confirmed && r.payments?.[o]?.coveredUids?.includes(uid));
+            const coveringNames = (p?.coveredUids || []).map(cid => users.find(x=>x.uid===cid)?.displayName?.split(' ')[0]).filter(Boolean).join(', ');
             return (
               <div key={uid} style={{fontSize:12,padding:'3px 0',display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
                 <span>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'} {u.displayName?.split(' ')[0]}:</span>
                 {p ? (
                   <span style={{color:p.confirmed?'var(--sage)':'var(--gold)'}}>
-                    {p.confirmed ? '✓' : '⏳'} {money(p.amount)} via {p.method}{p.confirmed?' (confirmed)':' (pending confirmation)'}
+                    {p.confirmed ? '✓' : '⏳'} {money(p.amount)} via {p.method}{coveringNames?` · covering ${coveringNames}`:''}{p.confirmed?' (confirmed)':' (pending confirmation)'}
                   </span>
+                ) : coveredBy ? (
+                  <span style={{color:'var(--sage)'}}>✓ covered by {users.find(x=>x.uid===coveredBy)?.displayName?.split(' ')[0]}</span>
                 ) : (
                   <span style={{color:'var(--muted)'}}>nothing logged yet</span>
                 )}
@@ -362,7 +382,7 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
 
         {/* My actions */}
         <div className="btn-row" style={{marginTop:8}}>
-          {iAmTagged && !myPayment?.confirmed && (
+          {iAmTagged && !myPayment?.confirmed && !coveredByOther && (
             <button className="btn btn-secondary" style={{fontSize:12,padding:'6px 12px'}} onClick={onLogPayment}>
               {myPayment ? 'Update my payment' : `💸 Log my payment to ${r.byName?.split(' ')[0]}`}
             </button>
@@ -386,17 +406,30 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
 }
 
 function LogPaymentModal({ r, profile, users, onClose }) {
+  const me = profile?.uid;
+  const uploader = users.find(u => u.uid === r.by);
+  const upName = uploader?.displayName?.split(' ')[0] || r.byName?.split(' ')[0] || 'them';
   const evenShare = r.split==='even' && r.whoIds?.length ? r.amt/r.whoIds.length : null;
-  const existing = r.payments?.[profile?.uid];
+  const existing = r.payments?.[me];
   const [amount, setAmount] = useState(existing?.amount ?? (evenShare!=null ? evenShare.toFixed(2) : ''));
   const [method, setMethod] = useState(existing?.method || (r.payMethods?.[0] || PAYMENT_METHODS[0]));
+  const [coveringUids, setCoveringUids] = useState(existing?.coveredUids || []);
+
+  // Crew I could cover: tagged, not me, not the uploader, not already confirmed-paid
+  const otherTagged = (r.whoIds || []).filter(uid => uid !== me && uid !== r.by && !r.payments?.[uid]?.confirmed);
+  const toggleCover = (uid) => setCoveringUids(c => c.includes(uid) ? c.filter(x=>x!==uid) : [...c, uid]);
+  const coveredShareEach = evenShare || 0;
+  const myShare = parseFloat(amount) || 0;
+  const totalToPay = myShare + coveringUids.length * coveredShareEach;
 
   async function submit() {
-    const amt = parseFloat(amount);
-    if (isNaN(amt) || amt <= 0) { alert('Enter how much you\'re sending'); return; }
+    if (totalToPay <= 0) { alert('Enter how much you\'re sending'); return; }
     try {
       await updateDoc(doc(db,'receipts',r.id), {
-        [`payments.${profile.uid}`]: { amount: amt, method, confirmed: false, at: new Date().toISOString() }
+        [`payments.${me}`]: {
+          amount: totalToPay, method, confirmed: false, at: new Date().toISOString(),
+          ...(coveringUids.length ? { coveredUids: coveringUids } : {}),
+        }
       });
       onClose();
     } catch {
@@ -405,19 +438,58 @@ function LogPaymentModal({ r, profile, users, onClose }) {
   }
 
   return (
-    <Modal title={`Pay ${r.byName?.split(' ')[0]} back — ${r.desc}`} onClose={onClose}>
+    <Modal title={`Pay ${upName} back — ${r.desc}`} onClose={onClose}>
       {evenShare!=null && <div className="tip-box" style={{marginBottom:10}}>Your share of this even split: <b>{money(evenShare)}</b></div>}
       {r.split==='manual' && <div className="tip-box" style={{marginBottom:10}}>Manual split — enter the portion of the bill that was yours.</div>}
       <div className="form-group"><label>Amount I'm sending ($)</label>
         <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} autoFocus />
       </div>
+
+      {evenShare!=null && otherTagged.length > 0 && (
+        <div className="form-group">
+          <label>Also covering…</label>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:6}}>Tap anyone whose share you're paying — it's added to your total and marks them settled.</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+            {otherTagged.map(uid => {
+              const u = users.find(x=>x.uid===uid);
+              if (!u) return null;
+              const on = coveringUids.includes(uid);
+              return (
+                <div key={uid} className={`check-pill ${on?'sel':''}`} onClick={()=>toggleCover(uid)}>
+                  <Avatar user={u} size={18} /> {u.displayName?.split(' ')[0]} <span style={{fontSize:11,color:'var(--muted)'}}>+{money(coveredShareEach)}</span>
+                </div>
+              );
+            })}
+          </div>
+          {coveringUids.length > 0 && (
+            <div style={{fontSize:13,marginTop:8,fontWeight:'bold',color:'var(--ocean)'}}>
+              You're sending {money(totalToPay)}
+              <span style={{fontSize:11,fontWeight:'normal',color:'var(--muted)',marginLeft:6}}>(your {money(myShare)} + {coveringUids.length} × {money(coveredShareEach)})</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="form-group"><label>How I'm sending it</label>
         <select value={method} onChange={e=>setMethod(e.target.value)}>
           {(r.payMethods?.length ? r.payMethods : PAYMENT_METHODS).map(m=><option key={m}>{m}</option>)}
         </select>
       </div>
+
+      {(method === 'Venmo' || method === 'Apple Cash') && (
+        <div className="tip-box" style={{marginBottom:12}}>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:8}}>Open the app to send {money(totalToPay)}, then tap Log payment so {upName} sees it's coming.</div>
+          {method === 'Venmo' && (uploader?.venmoHandle
+            ? <button className="btn btn-primary" style={{background:'#3D95CE',borderColor:'#3D95CE'}} onClick={()=>openVenmo(uploader.venmoHandle, totalToPay, r.desc)}>Open Venmo → pay {money(totalToPay)}</button>
+            : <div style={{fontSize:12,color:'var(--coral)'}}>{upName} hasn't added their Venmo yet — ask them to set it in Me → Payment info.</div>)}
+          {method === 'Apple Cash' && (uploader?.phone
+            ? <button className="btn btn-primary" style={{background:'#34C759',borderColor:'#34C759'}} onClick={()=>openAppleCash(uploader.phone)}>Open Messages → send Apple Cash</button>
+            : <div style={{fontSize:12,color:'var(--coral)'}}>{upName} hasn't added their phone yet — ask them to set it in Me → Payment info.</div>)}
+        </div>
+      )}
+
       <div className="btn-row">
-        <button className="btn btn-primary" onClick={submit}>Send for {r.byName?.split(' ')[0]}'s confirmation</button>
+        <button className="btn btn-primary" onClick={submit}>Log {money(totalToPay)} for {upName}'s confirmation</button>
         <button className="btn-mini" onClick={onClose}>Cancel</button>
       </div>
     </Modal>
