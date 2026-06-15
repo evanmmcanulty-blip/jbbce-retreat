@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
@@ -505,10 +505,20 @@ function MealsTab({ meals, users, profile, isAdmin }) {
     return best ? MEAL_OPTIONS.find(o=>o.value===best) : null;
   }
 
+  // Tap a new option = set it; tap your current option again (or clear) = remove the vote
   async function submitVote() {
-    if (!pendingVote || !voteModal) return;
-    await setDoc(doc(db,'meals',`${voteModal.mt}-${voteModal.i}`), { votes: { [profile.uid]: pendingVote } }, { merge: true });
+    if (!voteModal) return;
+    const ref = doc(db,'meals',`${voteModal.mt}-${voteModal.i}`);
+    const current = getMealDoc(voteModal.mt, voteModal.i)?.votes?.[profile.uid];
+    if (pendingVote && pendingVote !== current) {
+      await setDoc(ref, { votes: { [profile.uid]: pendingVote } }, { merge: true });
+    } else {
+      await updateDoc(ref, { [`votes.${profile.uid}`]: deleteField() }).catch(()=>{});
+    }
     setVoteModal(null); setPendingVote('');
+  }
+  async function clearVote(mt, i, uid) {
+    await updateDoc(doc(db,'meals',`${mt}-${i}`), { [`votes.${uid}`]: deleteField() });
   }
   async function setFinal(mt, i, val) {
     await setDoc(doc(db,'meals',`${mt}-${i}`), { final: val }, { merge: true });
@@ -518,10 +528,11 @@ function MealsTab({ meals, users, profile, isAdmin }) {
   }
 
   const mealDoc = voteModal ? getMealDoc(voteModal.mt, voteModal.i) : null;
+  const currentVoteInModal = mealDoc?.votes?.[profile?.uid] || '';
 
   return (
     <div>
-      <div className="section-sub">Tap any cell to vote and see everyone's votes. If "I'll Cook" is the plan, admin picks who's cooking and it shows on Today.</div>
+      <div className="section-sub">Tap any cell to vote — tap your choice again to remove it. If "I'll Cook" wins, admin picks who's cooking and it shows on Today.</div>
       <div style={{overflowX:'auto'}}>
         <div className="mv-grid" style={{gridTemplateColumns:`80px repeat(${TRIP_DAYS.length}, 1fr)`}}>
           <div />
@@ -568,6 +579,7 @@ function MealsTab({ meals, users, profile, isAdmin }) {
                       const cur = d?.final || '';
                       const cooks = d?.cooks || [];
                       const showCooks = cur==='ill_cook' || cur==='house';
+                      const existingVotes = Object.entries(d?.votes||{});
                       return (
                         <td key={i} style={{padding:3,verticalAlign:'top'}}>
                           <select style={{fontSize:10,padding:3,marginBottom:3}} value={cur} onChange={e=>setFinal(mt,i,e.target.value)}>
@@ -585,6 +597,22 @@ function MealsTab({ meals, users, profile, isAdmin }) {
                               ))}
                             </div>
                           )}
+                          {existingVotes.length > 0 && (
+                            <div style={{marginTop:4,paddingTop:4,borderTop:'1px solid var(--border)'}}>
+                              <div style={{fontSize:10,color:'var(--muted)',letterSpacing:'.04em',marginBottom:3}}>VOTES</div>
+                              {existingVotes.map(([uid,v]) => {
+                                const u = users.find(x=>x.uid===uid);
+                                const o = MEAL_OPTIONS.find(x=>x.value===v);
+                                if (!u) return null;
+                                return (
+                                  <div key={uid} style={{display:'flex',alignItems:'center',gap:4,marginBottom:3,fontSize:11}}>
+                                    <span style={{flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{u.avatar&&u.avatar!=='⭐'?u.avatar:'👤'} {o?.icon} {u.displayName?.split(' ')[0]}</span>
+                                    <button className="btn-mini" style={{padding:'1px 6px',fontSize:11,borderColor:'var(--coral)',color:'var(--coral)'}} title={`Clear ${u.displayName}'s vote`} onClick={()=>clearVote(mt,i,uid)}>✕</button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </td>
                       );
                     })}
@@ -596,25 +624,41 @@ function MealsTab({ meals, users, profile, isAdmin }) {
         </div>
       )}
 
-      {/* Vote modal with everyone's votes visible */}
+      {/* Vote modal — everyone's votes visible; tap your pick again to remove it */}
       {voteModal && (
-        <Modal title={`${voteModal.mt} — ${fmtFull(TRIP_DAYS[voteModal.i])}`} onClose={()=>setVoteModal(null)}>
+        <Modal title={`${voteModal.mt} — ${fmtFull(TRIP_DAYS[voteModal.i])}`} onClose={()=>{setVoteModal(null);setPendingVote('');}}>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:10}}>
+            {currentVoteInModal
+              ? <>Your vote: <b>{MEAL_OPTIONS.find(o=>o.value===currentVoteInModal)?.label}</b> — tap it again to remove.</>
+              : 'Tap an option to vote.'}
+          </div>
           {MEAL_OPTIONS.map(opt => {
             const votersFor = users.filter(u => mealDoc?.votes?.[u.uid]===opt.value);
+            const isSelected = pendingVote === opt.value;
+            const isCurrent = currentVoteInModal === opt.value;
             return (
-              <div key={opt.value} className={`vote-option ${pendingVote===opt.value?'selected':''}`}
-                onClick={()=>setPendingVote(opt.value)}>
+              <div key={opt.value} className={`vote-option ${isSelected?'selected':''}`}
+                style={isCurrent && !isSelected ? {borderColor:'var(--ocean)',opacity:.55} : {}}
+                onClick={()=>setPendingVote(prev => prev===opt.value ? '' : opt.value)}>
                 <span style={{fontSize:20}}>{opt.icon}</span>
                 <span style={{flex:1}}>{opt.label.replace(/^[^ ]+ /,'')}</span>
-                <span style={{display:'flex',gap:2}}>
+                <span style={{display:'flex',gap:2,alignItems:'center'}}>
                   {votersFor.map(u=><Avatar key={u.uid} user={u} size={20} />)}
                 </span>
               </div>
             );
           })}
           <div className="btn-row" style={{marginTop:14}}>
-            <button className="btn btn-primary" onClick={submitVote} disabled={!pendingVote}>Submit my vote</button>
-            <button className="btn-mini" onClick={()=>setVoteModal(null)}>Cancel</button>
+            {(() => {
+              const willSubmit = pendingVote && pendingVote !== currentVoteInModal;
+              const willRemove = currentVoteInModal && !willSubmit;
+              return (
+                <button className="btn btn-primary" onClick={submitVote} disabled={!willSubmit && !willRemove}>
+                  {willSubmit ? 'Submit vote' : willRemove ? '🗑 Remove my vote' : 'Submit vote'}
+                </button>
+              );
+            })()}
+            <button className="btn-mini" onClick={()=>{setVoteModal(null);setPendingVote('');}}>Cancel</button>
           </div>
         </Modal>
       )}
