@@ -17,8 +17,18 @@ import Payments from '../components/Payments';
 // installed). Apple Cash has no amount deep-link, so we open Messages to the number.
 function openVenmo(handle, amount, note) {
   if (!handle) return;
+  const h = handle.replace(/^@/, '');
   const amt = (Number(amount) || 0).toFixed(2);
-  window.open(`https://venmo.com/${handle.replace(/^@/, '')}?txn=pay&amount=${amt}&note=${encodeURIComponent(note || '')}`, '_blank', 'noopener');
+  const n = encodeURIComponent(note || '');
+  // Open the app scheme directly — the venmo.com web link re-encodes the note on its
+  // redirect (spaces become "+"). Fall back to the web link only if the app doesn't take over.
+  const fallback = setTimeout(() => {
+    window.open(`https://venmo.com/${h}?txn=pay&amount=${amt}&note=${n}`, '_blank', 'noopener');
+  }, 1200);
+  const cancel = () => clearTimeout(fallback);
+  window.addEventListener('pagehide', cancel, { once: true });
+  window.addEventListener('blur', cancel, { once: true });
+  window.location.href = `venmo://paycharge?txn=pay&recipients=${h}&amount=${amt}&note=${n}`;
 }
 function openAppleCash(phone) {
   if (!phone) return;
