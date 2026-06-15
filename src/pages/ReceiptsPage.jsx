@@ -445,10 +445,14 @@ function LogPaymentModal({ r, profile, users, onClose }) {
         <input type="number" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} autoFocus />
       </div>
 
-      {evenShare!=null && otherTagged.length > 0 && (
+      {otherTagged.length > 0 && (
         <div className="form-group">
           <label>Also covering…</label>
-          <div style={{fontSize:12,color:'var(--muted)',marginBottom:6}}>Tap anyone whose share you're paying — it's added to your total and marks them settled.</div>
+          <div style={{fontSize:12,color:'var(--muted)',marginBottom:6}}>
+            {evenShare!=null
+              ? "Tap anyone whose share you're paying — it's added to your total and marks them settled."
+              : "Tap anyone you're covering — they'll be marked settled. Make sure the amount above includes their portion."}
+          </div>
           <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
             {otherTagged.map(uid => {
               const u = users.find(x=>x.uid===uid);
@@ -456,15 +460,21 @@ function LogPaymentModal({ r, profile, users, onClose }) {
               const on = coveringUids.includes(uid);
               return (
                 <div key={uid} className={`check-pill ${on?'sel':''}`} onClick={()=>toggleCover(uid)}>
-                  <Avatar user={u} size={18} /> {u.displayName?.split(' ')[0]} <span style={{fontSize:11,color:'var(--muted)'}}>+{money(coveredShareEach)}</span>
+                  <Avatar user={u} size={18} /> {u.displayName?.split(' ')[0]}
+                  {evenShare!=null && <span style={{fontSize:11,color:'var(--muted)'}}>+{money(coveredShareEach)}</span>}
                 </div>
               );
             })}
           </div>
-          {coveringUids.length > 0 && (
+          {coveringUids.length > 0 && evenShare!=null && (
             <div style={{fontSize:13,marginTop:8,fontWeight:'bold',color:'var(--ocean)'}}>
               You're sending {money(totalToPay)}
               <span style={{fontSize:11,fontWeight:'normal',color:'var(--muted)',marginLeft:6}}>(your {money(myShare)} + {coveringUids.length} × {money(coveredShareEach)})</span>
+            </div>
+          )}
+          {coveringUids.length > 0 && evenShare==null && (
+            <div style={{fontSize:12,marginTop:8,color:'var(--ocean)'}}>
+              Covering <b>{coveringUids.length}</b> — enter your combined total above.
             </div>
           )}
         </div>
