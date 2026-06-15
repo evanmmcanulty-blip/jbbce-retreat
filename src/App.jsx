@@ -12,6 +12,7 @@ import ReceiptsPage from './pages/ReceiptsPage';
 import InfoPage from './pages/InfoPage';
 import SettingsPage from './pages/SettingsPage';
 import Avatar from './components/Avatar';
+import Loader from './components/Loader';
 import { SunIcon, CalendarIcon, HomeIcon, ReceiptIcon, MapIcon, SlidersIcon } from './components/Icons';
 import './styles.css';
 
@@ -49,11 +50,7 @@ function AppShell() {
   const { docs: receipts } = useCollection(ready ? 'receipts' : null);
   const { docs: bulletins } = useCollection(ready ? 'bulletins' : null);
 
-  if (user === undefined) return (
-    <div style={{ display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',fontFamily:"'Barlow',system-ui,sans-serif",color:'#1a6b8a',fontSize:18 }}>
-      Loading...
-    </div>
-  );
+  if (user === undefined) return <Loader />;
   if (!user) return <AuthPage />;
 
   // Approval gate: new accounts wait for Brandon before seeing trip data

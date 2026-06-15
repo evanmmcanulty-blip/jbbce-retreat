@@ -238,3 +238,16 @@ textarea{resize:vertical;min-height:60px}
 .confetti-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:3}
 .confetti-piece{position:absolute;top:6px;border-radius:2px;animation:confettiFall var(--d,1s) ease-in forwards;animation-delay:var(--dl,0s)}
 @media(prefers-reduced-motion:reduce){.confetti-piece{display:none}}
+/* Boot loader — branded monument icon coming alive */
+.app-loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#f5f0e8;z-index:9999}
+.app-loader-icon svg{display:block;border-radius:26px;box-shadow:0 12px 34px rgba(26,107,138,.28)}
+.app-loader-msg{font-family:var(--font-label);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.loader-shimmer{transform:translateX(0) skewX(-18deg)}
+@media(prefers-reduced-motion:no-preference){
+  .loader-sun{transform-box:fill-box;transform-origin:center;animation:loaderSun 2.4s ease-in-out infinite}
+  .loader-shimmer{animation:loaderShimmer 1.9s ease-in-out infinite}
+  .app-loader-msg{animation:loaderMsg 1.8s ease-in-out infinite}
+}
+@keyframes loaderSun{0%,100%{opacity:.78;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes loaderShimmer{0%{transform:translateX(0) skewX(-18deg)}60%,100%{transform:translateX(210px) skewX(-18deg)}}
+@keyframes loaderMsg{0%,100%{opacity:.5}50%{opacity:1}}
