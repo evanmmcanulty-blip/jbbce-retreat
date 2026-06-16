@@ -16,7 +16,7 @@ jobs:
           cache: npm
 
       - name: Install app dependencies
-        run: npm install
+        run: npm install && cd functions && npm install
 
       - name: Build
         run: npm run build
