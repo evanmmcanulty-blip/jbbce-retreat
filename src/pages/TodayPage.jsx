@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
+import React, { useState, useRef } from 'react';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useUsers } from '../hooks/UsersContext';
 import { useWeather } from '../hooks/useWeather';
 import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, PTOWN_RESTAURANTS, WEATHER_AVG, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isoDate, isNightEvent } from '../constants';
 import Modal from '../components/Modal';
@@ -13,7 +14,7 @@ export default function TodayPage() {
   const { profile } = useAuth();
   const { docs: events } = useCollection('events');
   const { docs: meals } = useCollection('meals');
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const { weather, live: weatherLive } = useWeather();
   const today = new Date();
   const realIdx = TRIP_DAYS.findIndex(d => dayKey(d)===dayKey(today));
@@ -22,6 +23,7 @@ export default function TodayPage() {
   const [pendingVote, setPendingVote] = useState('');
   const [flashMeal, setFlashMeal] = useState(null);
   const [restaurantModal, setRestaurantModal] = useState(null);
+  const swipeStart = useRef(null);
 
   const d = TRIP_DAYS[viewIdx];
   const beforeTrip = today < TRIP_DAYS[0];
@@ -106,8 +108,19 @@ export default function TodayPage() {
     nowMin < 1250 ? ['sky-golden', '🌇'] : ['sky-dusk', '🌆'];
 
   return (
-    <div className="page">
-      {beforeTrip && <PreTripBanner users={users} events={events} />}
+    <div className="page"
+      onTouchStart={e => { swipeStart.current = [e.touches[0].clientX, e.touches[0].clientY]; }}
+      onTouchEnd={e => {
+        if (!swipeStart.current || beforeTrip) return;
+        const [sx, sy] = swipeStart.current;
+        const dx = e.changedTouches[0].clientX - sx;
+        const dy = Math.abs(e.changedTouches[0].clientY - sy);
+        swipeStart.current = null;
+        if (Math.abs(dx) > 50 && dy < 40)
+          setViewIdx(i => dx < 0 ? Math.min(i + 1, TRIP_DAYS.length - 1) : Math.max(i - 1, 0));
+      }}
+    >
+      {beforeTrip && <PreTripBanner users={users} events={events} profile={profile} />}
 
       {!beforeTrip && realIdx < 0 && (
         <div className="tip-box" style={{marginBottom:12}}>
@@ -173,16 +186,18 @@ export default function TodayPage() {
           const myOpt = myVote ? MEAL_OPTIONS.find(o=>o.value===myVote) : null;
           const winner = getWinner(mt);
           const cooks = cooksLine(mt);
+          const totalVotes = Object.keys(md?.votes || {}).length;
           return (
             <div key={mt} className={`meal-card ${myVote?'voted':'no-vote'} ${flashMeal===mt?'flash':''}`}
               onClick={()=>{setVoteModal({mt});setPendingVote(myVote||'');}}>
               <div className="mc-label">{mt.toUpperCase()}</div>
               <div className="mc-plan">{cooks || (winner ? winner.opt.label : 'No plan yet')}</div>
-              {/* A "winner" from a couple of votes is a leader, not a plan — say so */}
-              {!cooks && winner && !winner.final && (
-                <div style={{fontSize:10,color:'var(--muted)'}}>leading · {winner.votes} of {winner.total} vote{winner.total!==1?'s':''}</div>
+              {!cooks && totalVotes > 0 && (
+                <div style={{fontSize:10,color:'var(--muted)'}}>
+                  {winner && !winner.final ? `leading · ` : ''}{totalVotes} vote{totalVotes!==1?'s':''}
+                </div>
               )}
-              {!cooks && winner && winner.opt.value==='ill_cook' && <div style={{fontSize:11,color:'var(--muted)'}}>cook TBD — check Meals</div>}
+              {!cooks && winner?.opt?.value==='ill_cook' && <div style={{fontSize:11,color:'var(--muted)'}}>cook TBD — check Meals</div>}
               {winner && winner.opt.value==='eat_out' && (() => {
                 const rvotes = md?.restaurantVotes||{};
                 const myRid = rvotes[profile?.uid];
@@ -323,11 +338,18 @@ export default function TodayPage() {
   );
 }
 
-function PreTripBanner({ users, events }) {
+function PreTripBanner({ users, events, profile }) {
   const msLeft = TRIP_DAYS[0] - new Date();
   const daysLeft = Math.max(0, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
   const day1Events = events.filter(ev => ev.dayIdx === 0 || ev.recurring).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   const crew = users.filter(u => u.approved !== false);
+  const myDoc = profile && crew.find(u => u.uid === profile.uid);
+  const iHaveArrived = !!myDoc?.arrivedAt;
+
+  async function markArrived() {
+    if (!profile || iHaveArrived) return;
+    try { await updateDoc(doc(db, 'users', profile.uid), { arrivedAt: new Date().toISOString() }); } catch {}
+  }
 
   return (
     <div>
@@ -338,14 +360,23 @@ function PreTripBanner({ users, events }) {
         <div style={{fontSize:13,color:'var(--muted)',letterSpacing:'.08em',marginBottom:4}}>COUNTDOWN TO PTOWN</div>
         <div style={{fontSize:48,fontWeight:900,color:'var(--ocean)',lineHeight:1}}>{daysLeft}</div>
         <div style={{fontSize:15,color:'var(--muted)',marginTop:4}}>day{daysLeft!==1?'s':''} to go · Jun 29, Provincetown</div>
+        {!iHaveArrived && (
+          <button className="btn btn-primary" style={{marginTop:12,fontSize:13}} onClick={markArrived}>
+            🎉 I've arrived!
+          </button>
+        )}
+        {iHaveArrived && (
+          <div style={{marginTop:12,fontSize:13,color:'var(--sage)',fontWeight:'bold'}}>✓ You're in Ptown!</div>
+        )}
       </div>
 
       <div className="info-head" style={{marginTop:0}}>WHO'S IN ({crew.length})</div>
       <div style={{display:'flex',flexWrap:'wrap',gap:10,marginBottom:16}}>
         {crew.map(u => (
-          <div key={u.uid} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4}}>
+          <div key={u.uid} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,opacity:u.arrivedAt?1:.45}}>
             <Avatar user={u} size={36} />
             <div style={{fontSize:11,color:'var(--muted)'}}>{u.displayName?.split(' ')[0]}</div>
+            {u.arrivedAt && <div style={{fontSize:9,color:'var(--sage)'}}>here</div>}
           </div>
         ))}
       </div>

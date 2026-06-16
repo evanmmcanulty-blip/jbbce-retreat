@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { UsersProvider } from './hooks/UsersContext';
 import { useCollection } from './hooks/useCollection';
 import AuthPage from './pages/AuthPage';
 import TodayPage from './pages/TodayPage';
@@ -39,6 +40,25 @@ function AppShell() {
   // brand moment actually registers instead of flashing by in a few ms.
   const [minWait, setMinWait] = useState(true);
   useEffect(() => { const t = setTimeout(() => setMinWait(false), 900); return () => clearTimeout(t); }, []);
+
+  // Detect new deploys: compare index.html ETag on each visibility restore
+  const [swUpdate, setSwUpdate] = useState(false);
+  useEffect(() => {
+    let knownEtag = null;
+    async function check() {
+      try {
+        const r = await fetch('/', { method: 'HEAD', cache: 'no-store' });
+        const etag = r.headers.get('etag') || r.headers.get('last-modified');
+        if (!etag) return;
+        if (knownEtag === null) { knownEtag = etag; return; }
+        if (etag !== knownEtag) setSwUpdate(true);
+      } catch {}
+    }
+    check();
+    const handler = () => { if (!document.hidden) check(); };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
+  }, []);
   const viaVT = useRef(false);
   const navigate = (t) => {
     if (t === tab) return;
@@ -94,7 +114,14 @@ function AppShell() {
   ];
 
   return (
+    <UsersProvider>
     <div>
+      {swUpdate && (
+        <div style={{position:'fixed',bottom:60,left:0,right:0,background:'var(--ocean)',color:'#fff',padding:'10px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',zIndex:999,fontSize:14,boxShadow:'0 -2px 8px rgba(0,0,0,.2)'}}>
+          <span>New version available</span>
+          <button style={{background:'rgba(255,255,255,.2)',border:'none',color:'#fff',borderRadius:8,padding:'5px 14px',cursor:'pointer',fontSize:14}} onClick={()=>window.location.reload()}>Refresh</button>
+        </div>
+      )}
       <header className="app-header">
         <div className="app-header-top">
           <Avatar user={profile} size={26} />
@@ -134,6 +161,7 @@ function AppShell() {
         {tab==='settings' && <SettingsPage />}
       </main>
     </div>
+    </UsersProvider>
   );
 }
 

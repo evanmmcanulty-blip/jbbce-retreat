@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { doc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
-import { useCollection } from '../hooks/useCollection';
+import { useUsers } from '../hooks/UsersContext';
 import { ROOMS, TRAVEL_MODES_ARR, TRAVEL_MODES_DEP } from '../constants';
 import Avatar from '../components/Avatar';
 import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon, BellIcon, CreditCardIcon } from '../components/Icons';
@@ -10,7 +10,7 @@ import { enablePush, disablePush, pushState } from '../lib/push';
 
 export default function SettingsPage() {
   const { profile } = useAuth();
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const isAdmin = profile?.admin;
   const [sub, setSub] = useState('me');
 

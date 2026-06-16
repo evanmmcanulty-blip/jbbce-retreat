@@ -3,6 +3,7 @@ import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc } from 'firebase/
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useUsers } from '../hooks/UsersContext';
 import { useDoc } from '../hooks/useDoc';
 import { safeUrl, TRIP_DAYS, fmtDOW, fmtMon } from '../constants';
 import Avatar from '../components/Avatar';
@@ -55,7 +56,7 @@ export default function InfoPage() {
 
 function BulletinBoard({ profile, isAdmin }) {
   const { docs: bulletins } = useCollection('bulletins');
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const [text, setText] = useState('');
 
   async function post(e) {
@@ -115,7 +116,7 @@ function BulletinBoard({ profile, isAdmin }) {
 
 function GroceryList({ profile, isAdmin }) {
   const { docs: groceries } = useCollection('groceries');
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const [item, setItem] = useState('');
   const [note, setNote] = useState('');
 

@@ -3,6 +3,7 @@ import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc, deleteField } fr
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useUsers } from '../hooks/UsersContext';
 import { TRIP_DAYS, MEAL_TYPES, MEAL_OPTIONS, fmt12, fmtFull, fmtDOW, fmtMon, dayKey, isNightEvent, safeUrl } from '../constants';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
@@ -13,7 +14,7 @@ export default function EventsPage() {
   const { profile } = useAuth();
   const { docs: events } = useCollection('events');
   const { docs: ideas } = useCollection('ideas');
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const { docs: meals } = useCollection('meals');
   const [sub, setSub] = useState('calendar');
   const [selDay, setSelDay] = useState(0);

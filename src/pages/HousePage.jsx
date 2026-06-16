@@ -3,6 +3,7 @@ import { collection, addDoc, doc, setDoc, updateDoc, deleteDoc } from 'firebase/
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useUsers } from '../hooks/UsersContext';
 import { useDoc } from '../hooks/useDoc';
 import { HomeIcon, UsersIcon, MapPinIcon, KeyIcon, ClipboardIcon, ShoppingCartIcon } from '../components/Icons';
 import GuestsRooms from '../components/GuestsRooms';
@@ -10,7 +11,7 @@ import Avatar from '../components/Avatar';
 
 export default function HousePage() {
   const { profile } = useAuth();
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const [sub, setSub] = useState('info');
   const isAdmin = profile?.admin;
 

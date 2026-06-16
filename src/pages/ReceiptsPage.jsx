@@ -4,14 +4,41 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { db, storage } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useCollection } from '../hooks/useCollection';
+import { useUsers } from '../hooks/UsersContext';
 import { useDoc } from '../hooks/useDoc';
-import { PAYMENT_METHODS, money } from '../constants';
+import { PAYMENT_METHODS, money, TRIP_DAYS, fmtDOW } from '../constants';
 import { calcOwed } from '../utils/costEngine';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
 import { ScaleIcon, ReceiptIcon, CreditCardIcon } from '../components/Icons';
 import CostSplit from '../components/CostSplit';
 import Payments from '../components/Payments';
+
+function SpendChart({ receipts }) {
+  const byDay = TRIP_DAYS.map((_, i) => {
+    const isoDate = new Date(2026, 5, 29 + i).toISOString().slice(0, 10);
+    const total = receipts
+      .filter(r => (r.date || '').slice(0, 10) === isoDate)
+      .reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    return total;
+  });
+  const max = Math.max(...byDay, 1);
+  const daysWithSpend = byDay.filter(v => v > 0).length;
+  if (daysWithSpend === 0) return null;
+  return (
+    <div style={{marginBottom:14}}>
+      <div style={{fontSize:11,color:'var(--muted)',letterSpacing:'.06em',marginBottom:6}}>SPEND BY DAY</div>
+      <div style={{display:'flex',gap:3,alignItems:'flex-end',height:44}}>
+        {byDay.map((v, i) => (
+          <div key={i} title={v > 0 ? money(v) : ''} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+            <div style={{width:'100%',background: v > 0 ? 'var(--ocean)' : 'var(--border)',borderRadius:3,height: v > 0 ? `${Math.round((v / max) * 36) + 4}px` : '3px',transition:'height .2s'}} />
+            <div style={{fontSize:8,color:'var(--muted)'}}>{fmtDOW(TRIP_DAYS[i]).slice(0,1)}{new Date(2026, 5, 29 + i).getDate()}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // One-tap pay deep links. Venmo uses a universal link (opens the app on iPhone if
 // installed). Apple Cash has no amount deep-link, so we open Messages to the number.
@@ -38,7 +65,7 @@ function openAppleCash(phone) {
 export default function ReceiptsPage() {
   const { profile } = useAuth();
   const { docs: receipts, loading } = useCollection('receipts');
-  const { docs: users } = useCollection('users');
+  const users = useUsers();
   const isAdmin = profile?.admin;
   const isAccountant = profile?.accountant || isAdmin;
   const [editReceipt, setEditReceipt] = useState(null);
@@ -59,6 +86,7 @@ export default function ReceiptsPage() {
 
       {sub==='receipts' && (
         <>
+          <SpendChart receipts={receipts} />
           <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
           <UploadForm profile={profile} users={users} />
           {!loading && receipts.length===0 && <div className="empty-note">No receipts yet — front cash for groceries or a boat? Snap it here and the split sorts itself.</div>}
