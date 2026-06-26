@@ -10,6 +10,7 @@ import { PAYMENT_METHODS, money, TRIP_DAYS, fmtDOW } from '../constants';
 import { calcOwed } from '../utils/costEngine';
 import Modal from '../components/Modal';
 import Avatar from '../components/Avatar';
+import Skeleton from '../components/Skeleton';
 import { ScaleIcon, ReceiptIcon, CreditCardIcon } from '../components/Icons';
 import CostSplit from '../components/CostSplit';
 import Payments from '../components/Payments';
@@ -81,7 +82,7 @@ export default function ReceiptsPage() {
       </div>
 
       {sub==='settle' && (
-        <SettleUp receipts={receipts} users={users} profile={profile} onLogPayment={setPayModal} />
+        <SettleUp receipts={receipts} loading={loading} users={users} profile={profile} onLogPayment={setPayModal} />
       )}
 
       {sub==='receipts' && (
@@ -89,6 +90,7 @@ export default function ReceiptsPage() {
           <SpendChart receipts={receipts} />
           <div className="section-sub">Upload shared expenses. You get paid back; you confirm payments. People tagged get an alert badge.</div>
           <UploadForm profile={profile} users={users} />
+          {loading && receipts.length===0 && <Skeleton rows={3} />}
           {!loading && receipts.length===0 && <div className="empty-note">No receipts yet — front cash for groceries or a boat? Snap it here and the split sorts itself.</div>}
           {[...receipts].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r => (
             <ReceiptItem key={r.id} r={r} users={users} profile={profile} isAdmin={isAdmin}
@@ -137,11 +139,19 @@ function Confetti() {
   );
 }
 
-function SettleUp({ receipts, users, profile, onLogPayment }) {
+function SettleUp({ receipts, loading, users, profile, onLogPayment }) {
   const { data: costData } = useDoc('config/cost');
-  const { docs: payDocs } = useCollection('payments');
+  const { docs: payDocs, loading: payLoading } = useCollection('payments');
   if (!profile) return null;
   const me = profile.uid;
+
+  // Don't render the settle-up math (or fire the "all square" confetti) until the
+  // data is in — otherwise empty collections briefly read as "you owe nothing."
+  if (loading || payLoading) return (
+    <div className="card" style={{borderColor:'var(--ocean)'}}>
+      <div className="card-body" style={{borderTop:'none',padding:'12px 14px'}}><Skeleton rows={3} /></div>
+    </div>
+  );
 
   // What I owe each uploader: even-split receipts I'm tagged in, not fully paid, nothing logged yet
   const debts = {}; // creditorUid -> [{ r, share }]

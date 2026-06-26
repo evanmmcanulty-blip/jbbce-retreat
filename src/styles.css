@@ -204,6 +204,10 @@ textarea{resize:vertical;min-height:60px}
 /* Check pill */
 .check-pill{padding:5px 10px;border-radius:20px;border:1.5px solid var(--border);cursor:pointer;font-size:13px;background:#fff;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
 .check-pill.sel{background:var(--ol);border-color:var(--ocean);color:var(--ocean)}
+/* Loading skeleton — calm placeholder so data lists never flash a false empty state */
+.skeleton-row{height:16px;border-radius:7px;margin:11px 0;background:linear-gradient(100deg,var(--border) 30%,rgba(44,36,22,.05) 50%,var(--border) 70%);background-size:200% 100%}
+@media(prefers-reduced-motion:no-preference){.skeleton-row{animation:skeletonShimmer 1.4s ease-in-out infinite}}
+@keyframes skeletonShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 /* Code box */
 .code-box{background:var(--ol);border:1px solid var(--om);border-radius:8px;padding:9px 12px;font-size:17px;font-weight:bold;color:var(--ocean);letter-spacing:.08em;display:inline-block}
 @media(max-width:640px){

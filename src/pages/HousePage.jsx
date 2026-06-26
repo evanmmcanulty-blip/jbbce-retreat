@@ -8,6 +8,7 @@ import { useDoc } from '../hooks/useDoc';
 import { HomeIcon, UsersIcon, MapPinIcon, KeyIcon, ClipboardIcon, ShoppingCartIcon } from '../components/Icons';
 import GuestsRooms from '../components/GuestsRooms';
 import Avatar from '../components/Avatar';
+import Skeleton from '../components/Skeleton';
 
 export default function HousePage() {
   const { profile } = useAuth();
@@ -92,7 +93,7 @@ function HouseInfo({ isAdmin }) {
 }
 
 function GearList({ profile, users, isAdmin }) {
-  const { docs: gear } = useCollection('gear');
+  const { docs: gear, loading } = useCollection('gear');
   const [what, setWhat] = useState('');
   const [qty, setQty] = useState('');
 
@@ -120,7 +121,8 @@ function GearList({ profile, users, isAdmin }) {
         <button className="btn btn-primary" type="submit">I'm bringing this</button>
       </form>
 
-      {gear.length === 0 && <div className="empty-note">Nothing listed yet — add something you're packing!</div>}
+      {loading && gear.length === 0 && <Skeleton rows={3} />}
+      {!loading && gear.length === 0 && <div className="empty-note">Nothing listed yet — add something you're packing!</div>}
       {[...gear].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')).map(g => {
         const bringer = users.find(u => u.uid === g.byId);
         const mine = g.byId === profile?.uid;

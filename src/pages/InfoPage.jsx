@@ -8,6 +8,7 @@ import { useDoc } from '../hooks/useDoc';
 import { safeUrl, TRIP_DAYS, fmtDOW, fmtMon } from '../constants';
 import Avatar from '../components/Avatar';
 import Modal from '../components/Modal';
+import Skeleton from '../components/Skeleton';
 import { BellIcon, ShoppingCartIcon, LinkIcon, TicketIcon, AnchorIcon, BikeIcon, UtensilsIcon, MapPinIcon } from '../components/Icons';
 
 const BUILTINS = [
@@ -55,7 +56,7 @@ export default function InfoPage() {
 }
 
 function BulletinBoard({ profile, isAdmin }) {
-  const { docs: bulletins } = useCollection('bulletins');
+  const { docs: bulletins, loading } = useCollection('bulletins');
   const users = useUsers();
   const [text, setText] = useState('');
 
@@ -84,7 +85,8 @@ function BulletinBoard({ profile, isAdmin }) {
         </div>
         <button className="btn btn-primary" type="submit">Post announcement</button>
       </form>
-      {bulletins.length===0 && <div className="empty-note">Board's clear. Post the first heads-up — like "boat leaves 9am SHARP."</div>}
+      {loading && bulletins.length===0 && <Skeleton rows={3} />}
+      {!loading && bulletins.length===0 && <div className="empty-note">Board's clear. Post the first heads-up — like "boat leaves 9am SHARP."</div>}
       {[...bulletins].sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')).map(b => {
         const confirmedUsers = users.filter(u=>b.gotIt?.includes(u.uid));
         const iGotIt = b.gotIt?.includes(profile?.uid);
@@ -115,7 +117,7 @@ function BulletinBoard({ profile, isAdmin }) {
 }
 
 function GroceryList({ profile, isAdmin }) {
-  const { docs: groceries } = useCollection('groceries');
+  const { docs: groceries, loading } = useCollection('groceries');
   const users = useUsers();
   const [item, setItem] = useState('');
   const [note, setNote] = useState('');
@@ -157,7 +159,8 @@ function GroceryList({ profile, isAdmin }) {
       </form>
 
       <div className="info-head" style={{marginTop:0}}>🛒 NEEDED ({open.length})</div>
-      {open.length===0 && <div className="empty-note">Nothing needed right now!</div>}
+      {loading && groceries.length===0 && <Skeleton rows={3} />}
+      {!loading && open.length===0 && <div className="empty-note">Nothing needed right now!</div>}
       {open.map(g => {
         const claimer = users.find(u=>u.uid===g.claimedBy);
         const iClaimed = g.claimedBy===profile?.uid;
