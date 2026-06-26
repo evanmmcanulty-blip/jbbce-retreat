@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
@@ -20,6 +20,7 @@ export default function EventsPage() {
   const [selDay, setSelDay] = useState(0);
   const [filter, setFilter] = useState('all');
   const isAdmin = profile?.admin;
+  const swipeStart = useRef(null); // swipe left/right on Calendar to change day, like Today
 
   const eventsForDay = (idx) => events.filter(ev => {
     if (!(ev.recurring || ev.dayIdx === idx)) return false;
@@ -40,7 +41,18 @@ export default function EventsPage() {
 
       {sub==='calendar' && (
         <div className="events-layout">
-          <div className="events-main">
+          <div className="events-main"
+            onTouchStart={e => { swipeStart.current = [e.touches[0].clientX, e.touches[0].clientY]; }}
+            onTouchEnd={e => {
+              if (!swipeStart.current) return;
+              const [sx, sy] = swipeStart.current;
+              const dx = e.changedTouches[0].clientX - sx;
+              const dy = Math.abs(e.changedTouches[0].clientY - sy);
+              swipeStart.current = null;
+              if (Math.abs(dx) > 50 && dy < 40)
+                setSelDay(i => dx < 0 ? Math.min(i + 1, TRIP_DAYS.length - 1) : Math.max(i - 1, 0));
+            }}
+          >
             <div className="btn-row" style={{marginBottom:10}}>
               {[['all',null,'All'],['day',SunIcon,'Day'],['night',MoonIcon,'Night (after 4pm)']].map(([f,Icon,l]) => (
                 <button key={f} className="btn-mini" style={{display:'inline-flex',alignItems:'center',gap:4,...(filter===f?{borderColor:'var(--ocean)',color:'var(--ocean)',fontWeight:'bold'}:{})}}
