@@ -15,7 +15,7 @@ export default function TodayPage() {
   const { docs: events } = useCollection('events');
   const { docs: meals } = useCollection('meals');
   const users = useUsers();
-  const { weather, live: weatherLive } = useWeather();
+  const { weather } = useWeather();
   const today = new Date();
   const realIdx = TRIP_DAYS.findIndex(d => dayKey(d)===dayKey(today));
   const [viewIdx, setViewIdx] = useState(realIdx >= 0 ? realIdx : 0);
@@ -150,8 +150,10 @@ export default function TodayPage() {
           <div style={{background:'var(--ol)',border:'1px solid var(--om)',borderRadius:8,padding:'9px 12px',display:'flex',alignItems:'center',gap:10,marginBottom:12,fontSize:14}}>
             <span style={{fontSize:22}}>{w.icon}</span>
             <div>
-              {weatherLive
-                ? <><b>{w.shortForecast || 'Forecast'}:</b> {w.hi}° high / {w.lo}° low</>
+              {/* Per-day: real NWS forecasts carry a shortForecast; days beyond the
+                  ~7-day window fall back to climate averages and shouldn't claim to be a forecast. */}
+              {w.shortForecast
+                ? <><b>{w.shortForecast}:</b> {w.hi}° high / {w.lo}° low</>
                 : <><b>Typical late June:</b> {w.hi}° high / {w.lo}° low</>
               }
             </div>
