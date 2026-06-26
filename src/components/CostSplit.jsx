@@ -16,7 +16,8 @@ export default function CostSplit({ isAccountant }) {
   const { owe, nights, nightly } = calcOwed(users, costData);
 
   async function save() {
-    await setDoc(doc(db,'config','cost'), form, { merge: true });
+    const clean = { ...form, extras: (form.extras||[]).filter(x=>x.label.trim()) };
+    await setDoc(doc(db,'config','cost'), clean, { merge: true });
     setEditing(false);
   }
 
@@ -90,6 +91,17 @@ export default function CostSplit({ isAccountant }) {
             <div className="form-group"><label>Cleaning #2 ($)</label><input type="number" value={form.cleaning2} onChange={e=>setForm(f=>({...f,cleaning2:+e.target.value}))} /></div>
           </div>
           <div className="form-group"><label>Lodging tax %</label><input type="number" value={form.taxPct} onChange={e=>setForm(f=>({...f,taxPct:+e.target.value}))} /></div>
+          <div className="form-group">
+            <label>Extra line items (parking, deposit, damages…)</label>
+            {(form.extras||[]).map((x,i)=>(
+              <div key={i} style={{display:'flex',gap:6,marginBottom:6,alignItems:'center'}}>
+                <input style={{flex:2}} placeholder="Label" value={x.label} onChange={e=>{const n=[...form.extras];n[i]={...n[i],label:e.target.value};setForm(f=>({...f,extras:n}));}} />
+                <input style={{flex:1}} type="number" placeholder="$" value={x.amount} onChange={e=>{const n=[...form.extras];n[i]={...n[i],amount:+e.target.value};setForm(f=>({...f,extras:n}));}} />
+                <button className="btn btn-danger" type="button" onClick={()=>setForm(f=>({...f,extras:f.extras.filter((_,j)=>j!==i)}))}>🗑</button>
+              </div>
+            ))}
+            <button className="btn-mini" type="button" onClick={()=>setForm(f=>({...f,extras:[...(f.extras||[]),{label:'',amount:0}]}))}>+ Add line item</button>
+          </div>
           <div className="btn-row"><button className="btn btn-primary" onClick={save}>Save</button><button className="btn-mini" onClick={()=>setEditing(false)}>Cancel</button></div>
         </div>
       )}

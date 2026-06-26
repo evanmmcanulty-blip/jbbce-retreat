@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, deleteField } from 'firebase/firestore';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
@@ -423,6 +423,12 @@ function ReceiptItem({ r, users, profile, isAdmin, onEdit, onLogPayment }) {
           {iAmTagged && !myPayment?.confirmed && !coveredByOther && (
             <button className="btn btn-secondary" style={{fontSize:12,padding:'6px 12px'}} onClick={onLogPayment}>
               {myPayment ? 'Update my payment' : `💸 Log my payment to ${r.byName?.split(' ')[0]}`}
+            </button>
+          )}
+          {myPayment && !myPayment.confirmed && (
+            <button className="btn-mini" style={{color:'var(--coral)',borderColor:'var(--coral)'}}
+              onClick={async()=>{if(window.confirm('Retract the payment you logged? This clears it so you can start over.'))try{await updateDoc(doc(db,'receipts',r.id),{[`payments.${profile?.uid}`]:deleteField()})}catch{alert('Couldn\'t save — check connection.');}}}>
+              Retract
             </button>
           )}
           {iOwn && (

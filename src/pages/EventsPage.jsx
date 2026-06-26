@@ -426,7 +426,11 @@ function IdeasTab({ ideas, users, profile, isAdmin }) {
                     const cu = users.find(u=>u.uid===c.by);
                     return (
                       <div key={i} style={{fontSize:12,padding:'5px 0',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'baseline',gap:5}}>
-                        <Avatar user={cu} size={18} /> <span><b>{c.byName}:</b> {c.text}</span>
+                        <Avatar user={cu} size={18} /> <span style={{flex:1}}><b>{c.byName}:</b> {c.text}</span>
+                        {(c.by===profile?.uid||isAdmin) && (
+                          <button className="btn-mini" style={{padding:'0 6px',color:'var(--muted)'}} title="Delete comment"
+                            onClick={async()=>{await updateDoc(doc(db,'ideas',idea.id),{comments:idea.comments.filter((_,j)=>j!==i)});}}>✕</button>
+                        )}
                       </div>
                     );
                   })}
