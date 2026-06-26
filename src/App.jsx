@@ -69,6 +69,16 @@ function AppShell() {
     // promise — expected (newest tap wins), so swallow it to keep the console clean.
     document.startViewTransition(() => flushSync(() => setTab(t))).finished.catch(() => {});
   };
+
+  // In-app deep links: any component can jump to a tab (and optionally a Settings
+  // sub-tab) by firing this event — used by the Today nudge that routes a new
+  // arriver straight to Settings → Arrivals instead of making them hunt for it.
+  const [settingsSub, setSettingsSub] = useState(null);
+  useEffect(() => {
+    const handler = (e) => { if (e.detail?.sub) setSettingsSub(e.detail.sub); navigate(e.detail?.tab); };
+    window.addEventListener('jbbce-nav', handler);
+    return () => window.removeEventListener('jbbce-nav', handler);
+  });
   // Subscribe only once signed in and approved — otherwise rules deny and log noise
   const ready = user && profile?.approved !== false;
   const { docs: receipts } = useCollection(ready ? 'receipts' : null);
@@ -158,7 +168,7 @@ function AppShell() {
         {tab==='house' && <HousePage />}
         {tab==='receipts' && <ReceiptsPage />}
         {tab==='info' && <InfoPage />}
-        {tab==='settings' && <SettingsPage />}
+        {tab==='settings' && <SettingsPage initialSub={settingsSub} />}
       </main>
     </div>
     </UsersProvider>

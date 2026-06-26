@@ -8,11 +8,13 @@ import Avatar from '../components/Avatar';
 import { UserIcon, LogInIcon, LogOutIcon, SlidersIcon, BellIcon, CreditCardIcon } from '../components/Icons';
 import { enablePush, disablePush, pushState } from '../lib/push';
 
-export default function SettingsPage() {
+export default function SettingsPage({ initialSub }) {
   const { profile } = useAuth();
   const users = useUsers();
   const isAdmin = profile?.admin;
-  const [sub, setSub] = useState('me');
+  const [sub, setSub] = useState(initialSub || 'me');
+  // Honor a deep link that arrives after the page is already mounted
+  useEffect(() => { if (initialSub) setSub(initialSub); }, [initialSub]);
 
   return (
     <div className="page">

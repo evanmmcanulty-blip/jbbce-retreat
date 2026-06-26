@@ -131,7 +131,12 @@ export default function TodayPage() {
       {profile && !profile.room && (
         <div className="tip-box" style={{marginBottom:12}}>
           🛏 You're not in a room yet, so you're not in the cost split. Ask Brandon to assign you one,
-          and set your real arrival & departure in ⚙️ Settings → Arrivals — your dates drive what you owe.
+          and set your real arrival & departure — your dates drive what you owe.
+          <div style={{marginTop:8}}>
+            <button className="btn-mini" onClick={()=>window.dispatchEvent(new CustomEvent('jbbce-nav',{detail:{tab:'settings',sub:'arrivals'}}))}>
+              Set my arrival & departure →
+            </button>
+          </div>
         </div>
       )}
 
