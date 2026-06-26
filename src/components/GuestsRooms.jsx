@@ -5,7 +5,7 @@ import { ROOMS } from '../constants';
 import Avatar from './Avatar';
 import { UsersIcon } from './Icons';
 
-const chipStyle = { display:'inline-flex',alignItems:'center',justifyContent:'center',width:34,height:34,borderRadius:8,border:'1px solid var(--border)',textDecoration:'none',fontSize:15,lineHeight:1 };
+const chipStyle = { display:'inline-flex',alignItems:'center',justifyContent:'center',width:40,height:40,borderRadius:8,border:'1px solid var(--border)',background:'#fff',textDecoration:'none',fontSize:16,lineHeight:1 };
 
 // Contact data (phone, venmoHandle) is collected in Settings but otherwise only
 // surfaced when you owe someone money — this unburies it as a tap-to-reach roster.
