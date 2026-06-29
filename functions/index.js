@@ -82,9 +82,11 @@ exports.morningBriefing = onSchedule({ schedule: 'every day 08:00', timeZone: 'A
 
   const allUids = await approvedUidsExcept(null);
   const pairs = await tokensFor(allUids);
+  // Framed as a morning preview ("later today"), not a live alert — a bare event
+  // list arriving at 8am read as if things were happening now.
   await send(pairs, {
-    title: `📅 Day ${dayIdx + 1} in Ptown`,
-    body: summary,
+    title: `☀️ Good morning — Day ${dayIdx + 1} in Ptown`,
+    body: `Later today: ${summary}`,
     tab: 'today',
   });
 });

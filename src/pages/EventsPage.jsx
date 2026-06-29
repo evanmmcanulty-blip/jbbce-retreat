@@ -193,11 +193,26 @@ function calExport(ev, selDay) {
   const di = ev.recurring ? selDay : (ev.dayIdx||0);
   const d = TRIP_DAYS[di];
   const [h,m] = (ev.time||'10:00').split(':').map(Number);
-  const st = new Date(d); st.setHours(h,m,0,0);
-  const en = new Date(st.getTime()+2*3600000);
   const z = n => String(n).padStart(2,'0');
-  const ic = dt => `${dt.getFullYear()}${z(dt.getMonth()+1)}${z(dt.getDate())}T${z(dt.getHours())}${z(dt.getMinutes())}00`;
-  const b = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${ic(st)}\nDTEND:${ic(en)}\nSUMMARY:${ev.title}\nLOCATION:${ev.loc||'Provincetown'}\nDESCRIPTION:${(ev.desc||'').replace(/\n/g,' ')}\nEND:VEVENT\nEND:VCALENDAR`;
+  // Emit an absolute UTC instant (…Z) instead of a floating local time, so every
+  // calendar shows the right wall-clock no matter the device's timezone — a floating
+  // time built from the browser's clock is what let a 7pm event fire at the wrong hour.
+  // debt: hardcoded EDT (UTC-4); valid because the whole trip (Jun 29–Jul 11) is in EDT.
+  const start = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), h + 4, m, 0));
+  const end = new Date(start.getTime() + 2*3600000);
+  const ic = dt => `${dt.getUTCFullYear()}${z(dt.getUTCMonth()+1)}${z(dt.getUTCDate())}T${z(dt.getUTCHours())}${z(dt.getUTCMinutes())}00Z`;
+  const esc = s => String(s||'').replace(/([,;\\])/g,'\\$1').replace(/\n/g,' ');
+  const b = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JBBCE//Ptown 2026//EN','BEGIN:VEVENT',
+    `UID:${ev.id}@provincetown-2026`,
+    `DTSTAMP:${ic(new Date())}`,
+    `DTSTART:${ic(start)}`,
+    `DTEND:${ic(end)}`,
+    `SUMMARY:${esc(ev.title)}`,
+    `LOCATION:${esc(ev.loc||'Provincetown')}`,
+    `DESCRIPTION:${esc(ev.desc)}`,
+    'END:VEVENT','END:VCALENDAR',
+  ].join('\r\n');
   const url = URL.createObjectURL(new Blob([b],{type:'text/calendar'}));
   const a = document.createElement('a'); a.href=url; a.download=ev.title.replace(/[^a-z0-9]/gi,'_')+'.ics'; a.click();
   URL.revokeObjectURL(url);
