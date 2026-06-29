@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
 
+# Serialize deploys so a new push can't start while the previous one is still
+# settling — overlapping runs are what produced the functions 409 "unable to
+# queue the operation". Queue, don't cancel, so every commit still ships.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,15 +23,36 @@ jobs:
           cache: npm
 
       - name: Install app dependencies
-        run: npm install && cd functions && npm install
+        run: npm install
+
+      - name: Install functions dependencies
+        run: npm install --prefix functions
 
       - name: Build
+        id: build
         run: npm run build
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy
-        run: firebase deploy --only firestore:rules,hosting,functions --token "$FIREBASE_TOKEN" --project provincetown-2026
+      # Each target deploys independently with its own retry/no-op handling, so a
+      # transient failure in one no longer aborts the others. Functions/hosting run
+      # even if an earlier deploy step failed (but never if the build failed), and a
+      # genuine failure still turns the job red — green means it actually shipped.
+      - name: Deploy Firestore rules
+        if: success()
+        run: bash .github/deploy-target.sh firestore:rules
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Functions
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: bash .github/deploy-target.sh functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Deploy Hosting
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: bash .github/deploy-target.sh hosting
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
