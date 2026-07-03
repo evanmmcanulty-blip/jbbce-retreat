@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { collection, addDoc, doc, updateDoc, deleteDoc, setDoc, deleteField } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
@@ -17,10 +17,14 @@ export default function EventsPage() {
   const users = useUsers();
   const { docs: meals } = useCollection('meals');
   const [sub, setSub] = useState('calendar');
-  const [selDay, setSelDay] = useState(0);
+  const todayIdx = TRIP_DAYS.findIndex(d => dayKey(d)===dayKey(new Date()));
+  const [selDay, setSelDay] = useState(todayIdx >= 0 ? todayIdx : 0); // open on today, like the Today tab
   const [filter, setFilter] = useState('all');
   const isAdmin = profile?.admin;
   const swipeStart = useRef(null); // swipe left/right on Calendar to change day, like Today
+  const todayChipRef = useRef(null);
+  // Land the horizontal day-strip on today's chip on open, so you don't scroll to find it.
+  useEffect(() => { todayChipRef.current?.scrollIntoView({ inline:'center', block:'nearest' }); }, []);
 
   const eventsForDay = (idx) => events.filter(ev => {
     if (!(ev.recurring || ev.dayIdx === idx)) return false;
@@ -62,7 +66,7 @@ export default function EventsPage() {
             </div>
             <div className="day-strip">
               {TRIP_DAYS.map((d,i) => (
-                <div key={i} className={`day-chip ${i===selDay?'active':''} ${dayKey(d)===dayKey(new Date())?'today':''}`} onClick={()=>setSelDay(i)}>
+                <div key={i} ref={i===selDay?todayChipRef:null} className={`day-chip ${i===selDay?'active':''} ${dayKey(d)===dayKey(new Date())?'today':''}`} onClick={()=>setSelDay(i)}>
                   <div className="dow">{fmtDOW(d)}</div>
                   <div className="dn">{d.getDate()}</div>
                   <div className="dmo">{fmtMon(d)}</div>
@@ -71,7 +75,7 @@ export default function EventsPage() {
               ))}
             </div>
             <EventList events={eventsForDay(selDay)} users={users} profile={profile} selDay={selDay} isAdmin={isAdmin} />
-            <AddEventForm profile={profile} />
+            <AddEventForm profile={profile} selDay={selDay} />
           </div>
           <div className="ideas-sidebar">
             <div style={{fontWeight:'bold',color:'var(--ocean)',fontSize:13,marginBottom:8,display:'flex',alignItems:'center',gap:5}}>
@@ -253,22 +257,24 @@ function EditEventForm({ ev, onDone }) {
   );
 }
 
-function AddEventForm({ profile }) {
+function AddEventForm({ profile, selDay }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title:'',dayIdx:'0',time:'',recurring:false,strict:false,cost:'',url:'',loc:'',desc:'' });
+  const [form, setForm] = useState({ title:'',dayIdx:String(selDay),time:'',recurring:false,strict:false,cost:'',url:'',loc:'',desc:'' });
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  // Opening the form assumes the day you're currently viewing.
+  const toggle = () => { if (!open) set('dayIdx', String(selDay)); setOpen(o=>!o); };
   async function submit(e) {
     e.preventDefault();
     await addDoc(collection(db,'events'), {
       ...form, dayIdx: form.recurring?null:parseInt(form.dayIdx),
       rsvps:{}, rsvpsByDay:{}, owner: profile.uid, ownerName: profile.displayName, createdAt: new Date().toISOString(),
     });
-    setForm({title:'',dayIdx:'0',time:'',recurring:false,strict:false,cost:'',url:'',loc:'',desc:''});
+    setForm({title:'',dayIdx:String(selDay),time:'',recurring:false,strict:false,cost:'',url:'',loc:'',desc:''});
     setOpen(false);
   }
   return (
     <div className="card" style={{marginTop:8}}>
-      <div className="card-head" onClick={()=>setOpen(!open)}>
+      <div className="card-head" onClick={toggle}>
         <div className="card-title">+ Add an event</div><span className={`chev ${open?'open':''}`}>▼</span>
       </div>
       {open && <div className="card-body" style={{paddingTop:12}}>
